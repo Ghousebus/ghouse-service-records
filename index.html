@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>GHOUSE — Service Records</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#E0621B">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GHOUSE">
+<link rel="icon" href="icons/icon-192.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --cream:#FBF8F2;
+    --ink:#211D1A;
+    --ink-soft:#5B554D;
+    --rule:#DFD6C4;
+    --terracotta:#E0621B;
+    --terracotta-dark:#B84A12;
+    --steel:#1E6FA8;
+    --ebers-blue:#0068B7;
+    --panel:#FFFFFF;
+    --ok-bg:#EAF4EC;
+    --ok-ink:#2A6B3B;
+    --err-bg:#FBEAE7;
+    --err-ink:#9B3E22;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(ellipse at top left, rgba(224,98,27,0.06), transparent 55%),
+      var(--cream);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:60px;
+  }
+  .header{
+    border-bottom:3px solid var(--ink);
+    background:var(--panel);
+    padding:22px 20px 18px;
+  }
+  .header-inner{
+    max-width:880px;
+    margin:0 auto;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+  .wordmark{
+    font-family:'Bebas Neue',sans-serif;
+    font-weight:400;
+    font-size:clamp(36px,8vw,50px);
+    letter-spacing:6px;
+    color:var(--terracotta);
+    margin:0;
+    line-height:1;
+  }
+  .tagline{
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:600;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    font-size:13px;
+    color:var(--ink);
+    margin:4px 0 0;
+  }
+  .phone{
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:700;
+    letter-spacing:.03em;
+    font-size:13px;
+    color:var(--ink);
+    margin:6px 0 0;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .wa-icon{width:16px;height:16px;flex-shrink:0;}
+  .badge{
+    text-align:right;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    gap:8px;
+    max-width:210px;
+  }
+  .badge .logo-svg{width:100%;max-width:210px;height:auto;display:block;}
+  .badge strong{
+    display:block;
+    color:var(--ebers-blue);
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:700;
+    font-size:13px;
+    letter-spacing:.03em;
+    text-transform:uppercase;
+  }
+
+  .wrap{max-width:880px;margin:0 auto;padding:0 20px;}
+
+  /* Tabs */
+  .tabs{
+    display:flex;
+    margin-top:24px;
+    border-bottom:1.5px solid var(--ink);
+  }
+  .tab-btn{
+    flex:1;
+    background:none;
+    border:none;
+    padding:13px 10px;
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:700;
+    font-size:15px;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    cursor:pointer;
+    border-bottom:3px solid transparent;
+    margin-bottom:-1.5px;
+    transition:color .15s ease;
+  }
+  .tab-btn.active{color:var(--terracotta);border-bottom-color:var(--terracotta);}
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+
+  /* Entry form (ticket) */
+  .ticket{
+    max-width:720px;
+    margin:22px auto 0;
+    background:var(--panel);
+    border:1.5px solid var(--ink);
+  }
+  .ticket-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:16px 22px;
+    border-bottom:1.5px solid var(--ink);
+    background:repeating-linear-gradient(135deg, rgba(30,111,168,0.04) 0 10px, transparent 10px 20px);
+  }
+  .ticket-head h2{
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    font-size:20px;
+    margin:0;
+  }
+  .ticket-no{
+    font-family:'Barlow Condensed',sans-serif;
+    font-size:12px;
+    color:var(--ink-soft);
+    letter-spacing:.05em;
+  }
+
+  form{padding:22px;}
+  .field{margin-bottom:18px;}
+  .field label{
+    display:block;
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:600;
+    font-size:13px;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+  }
+  .field input, .field textarea{
+    width:100%;
+    border:1.5px solid var(--rule);
+    background:var(--cream);
+    padding:11px 12px;
+    font-family:'Inter',sans-serif;
+    font-size:15px;
+    color:var(--ink);
+    border-radius:2px;
+  }
+  .field input:focus, .field textarea:focus{
+    outline:none;
+    border-color:var(--steel);
+    background:#fff;
+  }
+  .field textarea{resize:vertical;min-height:64px;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media (max-width:560px){.row2{grid-template-columns:1fr;}}
+
+  .divider{border:none;border-top:1px dashed var(--rule);margin:22px 0;}
+  .section-label{
+    font-family:'Barlow Condensed',sans-serif;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--terracotta);
+    margin:0 0 14px;
+  }
+  .req{color:var(--terracotta);}
+
+  button, #confirmBtn{
+    width:100%;
+    background:var(--terracotta);
+    color:#fff;
+    border:none;
+    padding:15px;
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:700;
+    font-size:16px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    cursor:pointer;
+    border-radius:2px;
+    transition:background .15s ease;
+  }
+  button:hover{background:var(--terracotta-dark);}
+  button:disabled{background:var(--rule);cursor:not-allowed;}
+
+  .msg{margin:16px 22px 0;padding:12px 14px;font-size:14px;border-radius:2px;display:none;}
+  .msg.show{display:block;}
+  .msg.ok{background:var(--ok-bg);color:var(--ok-ink);border:1px solid var(--ok-ink);}
+  .msg.err{background:var(--err-bg);color:var(--err-ink);border:1px solid var(--err-ink);}
+
+  /* Review panel */
+  .review{padding:22px;display:none;}
+  .review.show{display:block;}
+  .review-note{font-size:13px;color:var(--ink-soft);margin:0 0 18px;line-height:1.5;}
+  .review-list{border-top:1px dashed var(--rule);}
+  .review-item{
+    display:flex;justify-content:space-between;gap:16px;
+    padding:11px 2px;border-bottom:1px dashed var(--rule);font-size:14.5px;
+  }
+  .review-item dt{
+    font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:12px;
+    letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);white-space:nowrap;
+  }
+  .review-item dd{margin:0;text-align:right;color:var(--ink);word-break:break-word;}
+  .review-item dd.empty{color:var(--ink-soft);font-style:italic;}
+  .review-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px;}
+  .btn-edit{
+    background:var(--panel);color:var(--ink);border:1.5px solid var(--ink);padding:15px;
+    font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;
+    letter-spacing:.06em;text-transform:uppercase;cursor:pointer;border-radius:2px;
+  }
+  .btn-edit:hover{background:var(--cream);}
+
+  /* Search panel */
+  .search-panel{
+    margin-top:22px;
+    background:var(--panel);
+    border:1.5px solid var(--ink);
+    padding:20px 22px;
+  }
+  .search-panel h2{
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    font-size:18px;
+    margin:0 0 16px;
+  }
+  .search-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .search-row-dates{margin-top:14px;}
+  @media (max-width:640px){.search-row{grid-template-columns:1fr;}}
+  .search-actions{display:flex;gap:12px;margin-top:16px;flex-wrap:wrap;}
+  .search-actions button{
+    flex:1;min-width:140px;border:none;padding:13px 16px;
+    font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;
+    letter-spacing:.05em;text-transform:uppercase;cursor:pointer;border-radius:2px;
+  }
+  .search-btn{background:var(--steel);color:#fff;}
+  .search-btn:hover{background:#175583;}
+  .search-btn:disabled{background:var(--rule);cursor:not-allowed;}
+  .export-btn{background:#2A6B3B;color:#fff;}
+  .export-btn:hover{background:#1F5029;}
+  .export-btn:disabled{background:var(--rule);cursor:not-allowed;}
+  .print-btn{background:var(--panel);color:var(--ink);border:1.5px solid var(--ink) !important;}
+  .print-btn:hover{background:var(--cream);}
+
+  .status-line{
+    margin-top:22px;font-family:'Barlow Condensed',sans-serif;font-size:13px;
+    letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);
+  }
+  .status-line .count{color:var(--terracotta);font-weight:700;}
+
+  .results{margin-top:16px;display:flex;flex-direction:column;gap:14px;}
+  .record{
+    background:var(--panel);border:1.5px solid var(--rule);
+    border-left:4px solid var(--terracotta);padding:16px 20px;
+  }
+  .record-top{
+    display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;
+    margin-bottom:10px;padding-bottom:10px;border-bottom:1px dashed var(--rule);
+  }
+  .record-vehicle{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:19px;letter-spacing:.03em;}
+  .record-date{font-family:'Barlow Condensed',sans-serif;font-size:13px;color:var(--ink-soft);letter-spacing:.03em;}
+  .record-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 20px;font-size:13.5px;}
+  @media (max-width:640px){.record-grid{grid-template-columns:1fr 1fr;}}
+  .record-grid dt{
+    font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:.05em;
+    text-transform:uppercase;color:var(--ink-soft);margin:0 0 2px;
+  }
+  .record-grid dd{margin:0;color:var(--ink);}
+  .record-complaint{grid-column:1 / -1;margin-top:4px;padding-top:8px;border-top:1px dashed var(--rule);}
+
+  .empty-state, .loading-state{
+    margin-top:24px;text-align:center;color:var(--ink-soft);font-size:14px;
+    padding:30px 20px;border:1.5px dashed var(--rule);
+  }
+
+  .footer{
+    max-width:880px;margin:26px auto 0;padding:0 20px;
+    font-size:11.5px;color:var(--ink-soft);text-align:center;line-height:1.6;
+  }
+
+  /* Print view */
+  #printArea{display:none;}
+  .print-frame{border:2px solid #000;padding:18px 22px;}
+  .print-header{
+    display:flex;justify-content:space-between;align-items:flex-start;
+    border-bottom:3px solid #000;padding-bottom:10px;margin-bottom:12px;
+  }
+  .print-header-left .print-wordmark{
+    font-family:'Bebas Neue',sans-serif;font-weight:400;font-size:32px;
+    letter-spacing:4px;color:var(--terracotta);margin:0;line-height:1;
+  }
+  .print-header-left .print-tagline{
+    font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:12px;
+    text-transform:uppercase;letter-spacing:.04em;margin:4px 0 0;
+  }
+  .print-header-left .print-phone{
+    font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11.5px;
+    margin:4px 0 0;display:flex;align-items:center;gap:5px;
+  }
+  .wa-icon-print{width:13px;height:13px;flex-shrink:0;}
+  .print-header-right{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:4px;}
+  .print-header-right .print-logo-svg{width:110px;height:auto;display:block;}
+  .print-header-right .print-dealer{
+    font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;
+    letter-spacing:.03em;text-transform:uppercase;color:var(--ebers-blue);
+  }
+  .print-meta-line{font-family:'Barlow Condensed',sans-serif;font-size:11px;color:#333;margin-bottom:10px;}
+  .print-table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:10px;}
+  .print-table th, .print-table td{
+    border:1px solid #999;padding:5px 6px;text-align:left;vertical-align:top;
+    word-wrap:break-word;overflow-wrap:break-word;white-space:normal;
+  }
+  .print-table th{
+    background:#EFEAE0;font-family:'Barlow Condensed',sans-serif;font-weight:700;
+    text-transform:uppercase;letter-spacing:.02em;font-size:9.5px;
+  }
+  .print-table th:nth-child(1), .print-table td:nth-child(1){width:9%;white-space:nowrap;}
+  .print-table th:nth-child(2), .print-table td:nth-child(2){width:9%;}
+  .print-table th:nth-child(3), .print-table td:nth-child(3){width:8%;}
+  .print-table th:nth-child(4), .print-table td:nth-child(4){width:6%;}
+  .print-table th:nth-child(5), .print-table td:nth-child(5){width:9%;}
+  .print-table th:nth-child(6), .print-table td:nth-child(6){width:10%;}
+  .print-table th:nth-child(7), .print-table td:nth-child(7){width:24%;}
+  .print-table th:nth-child(8), .print-table td:nth-child(8){width:11%;}
+  .print-table th:nth-child(9), .print-table td:nth-child(9){width:14%;}
+  .print-footer{
+    margin-top:16px;padding-top:8px;border-top:1px solid #999;
+    font-size:10px;color:#333;text-align:center;line-height:1.5;
+  }
+  .print-footer .print-doc-name{
+    font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.04em;
+    text-transform:uppercase;font-size:10.5px;color:var(--ink);margin-bottom:2px;
+  }
+
+  @media print{
+    body > *:not(#printArea){display:none !important;}
+    html, body{height:auto !important;margin:0 !important;padding:0 !important;background:#fff !important;}
+    #printArea{display:block !important;width:100%;}
+    @page{size:landscape;margin:10mm;}
+  }
+</style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="header-inner">
+      <div>
+        <h1 class="wordmark">GHOUSE</h1>
+        <p class="tagline">Bus Airconditioning Works</p>
+        <p class="phone"><svg class="wa-icon" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path fill="#25D366" d="M16.001 3C9.373 3 4 8.373 4 15c0 2.362.688 4.564 1.875 6.417L4 29l7.771-1.833A11.93 11.93 0 0 0 16.001 27C22.629 27 28 21.627 28 15S22.629 3 16.001 3z"/><path fill="#fff" d="M22.147 19.02c-.31.874-1.54 1.6-2.516 1.807-.667.14-1.538.253-4.474-.962-3.756-1.554-6.176-5.361-6.365-5.609-.181-.248-1.522-2.027-1.522-3.868 0-1.84.964-2.746 1.306-3.121.31-.34.744-.44 1.011-.44.267 0 .534.003.766.014.246.012.577-.093.902.688.31.744 1.052 2.585 1.144 2.774.093.19.155.412.031.66-.124.248-.186.4-.372.617-.186.216-.393.482-.562.648-.186.183-.38.382-.163.752.217.37.965 1.593 2.072 2.582 1.424 1.271 2.626 1.665 2.996 1.851.37.186.586.155.802-.093.217-.248.93-1.084 1.178-1.455.248-.37.496-.31.837-.186.34.124 2.166 1.022 2.537 1.208.37.186.62.279.712.434.093.155.093.897-.217 1.771z"/></svg>9052155055</p>
+      </div>
+      <div class="badge">
+        <svg class="logo-svg" xmlns="http://www.w3.org/2000/svg" viewBox="5 212 625 200">
+          <g>
+            <polyline fill="#000" points="176.7,385.2 158.6,385.2 158.6,368.5 176.6,368.5 176.6,361.4 158.6,361.4 158.6,344.9 176.6,344.9 176.6,354 183,354 183,337.8 144.3,337.8 144.3,344.9 150.7,344.9 150.7,385.2 144.3,385.2 144.3,392.5 183.1,392.5 183.1,376.2 176.7,376.2 176.7,385.2"/>
+            <path fill-rule="evenodd" clip-rule="evenodd" fill="#000" d="M193.9,385.3h-5.7v7.2h13.1v-5.2c3.7,4.2,8.4,6.2,14.2,6.2c5.8,0,10.9-2.2,15-6.2c4.1-4.2,6.4-9.5,6.4-15.5c0-5.9-2.2-11.3-6.4-15.5c-4.1-4.1-9.2-6.2-15-6.2c-6.1,0-10.6,1.8-14.2,6v-18.2h-13.2v7.1h5.7V385.3 M201.2,371.7c0-8.4,5.7-14.5,13.9-14.5c7.7,0,14,6.4,14,14.5c0,8.1-6.4,14.5-14,14.5C206.9,386.1,201.2,380.1,201.2,371.7z"/>
+            <path fill-rule="evenodd" clip-rule="evenodd" fill="#000" d="M283.8,379.2h-8.5c-3,4.5-7.1,6.9-12,6.9c-6.5,0-12.1-4.4-13.8-11.5h35.3c0.1-1,0.2-2,0.2-3c0-4.4-1.1-8.4-3.6-12.1c-4.1-6.2-10.7-9.7-18.1-9.7c-5.8,0-11.3,2.2-15.4,6.4c-4.1,4.2-6.4,9.6-6.4,15.5c0,5.8,2.3,11.3,6.4,15.5c4.1,4.2,9.6,6.4,15.4,6.4C272.4,393.5,280.2,388.2,283.8,379.2 M249.8,367.6c2.1-6.6,7.2-10.5,13.5-10.5c6.3,0,11.5,3.9,13.4,10.5H249.8z"/>
+            <path fill="#000" d="M294.6,385.3h-6v7.2h19.1v-7.2H302v-13c0-9.2,3.5-13.6,11.3-13.6v-8.5c-5.4,0.2-9.1,2.3-11.6,7.2v-6.5h-12.9v7.1h5.7V385.3"/>
+            <path fill="#000" d="M318.8,379v13.5h6.9v-2.7c2.4,2.5,5.4,3.6,9.2,3.6c8,0,13.4-5.4,13.4-12.8c0-6.7-3.2-9.9-10.5-12.3c-7-2.3-11.3-2.3-11.3-6.8c0-2.8,2.3-5.1,5.9-5.1c3.5,0,5.8,2,6.3,5.3h7.2v-10.8h-6.4v2.3c-2.2-2.2-4.9-3.2-8-3.2c-7.3,0-12.4,5.1-12.4,12.1c0,4.2,1.7,7.2,5.3,9.5c1.7,1.1,5,1.8,9.7,3.2c4.6,1.3,6.6,2.6,6.6,6.3c0,3.4-2.6,5.5-6.9,5.5c-4.1,0-7-3-7-7.4c0-0.1,0-0.1,0-0.2H318.8"/>
+            <path fill-rule="evenodd" clip-rule="evenodd" fill="#000" d="M358,398.7h-6v7.2h19.6v-7.2h-6.2v-11.4c3.6,4.2,8.1,6.1,14.2,6.1c5.8,0,10.9-2.2,15-6.2c4.1-4.2,6.4-9.5,6.4-15.5c0-5.9-2.2-11.3-6.4-15.5c-4.1-4.1-9.2-6.2-15-6.2c-5.9,0-10.6,2-14.2,6.1v-5.3h-13.1v7.1h5.7V398.7 M365.3,371.7c0-8.4,5.7-14.5,13.9-14.5c7.7,0,14,6.4,14,14.5c0,8.1-6.4,14.5-14,14.5C371,386.1,365.3,380.1,365.3,371.7z"/>
+            <path fill-rule="evenodd" clip-rule="evenodd" fill="#000" d="M418.1,343.4h6.9v-7.8h-6.9V343.4z M431.5,343.4h6.9v-7.8h-6.9V343.4z M447.9,385.3v-27.4h5.7v-7.1h-13.2v5.2c-3.6-4.2-8-5.9-13.8-5.9c-6.4,0-11.2,1.9-15.4,6.2c-4.1,4.2-6.4,9.6-6.4,15.5c0,5.9,2.3,11.3,6.4,15.5c4.1,4.1,9.2,6.2,15,6.2c5.9,0,10.6-2,14.3-6.2v5.2h13.1v-7.2H447.9z M440.6,371.7c0,8.4-5.8,14.5-14,14.5c-7.7,0-13.9-6.3-13.9-14.5c0-8.2,6.3-14.5,13.9-14.5C434.8,357.2,440.6,363.3,440.6,371.7z"/>
+            <path fill="#000" d="M499.3,378.5h-8.4c-2.8,5-7.3,7.6-12.3,7.6c-7.7,0-14-6.4-14-14.5c0-8.1,6.3-14.5,14-14.5c5.2,0,9.5,2.6,12.5,7.6h7.1v-13.9h-6.7v4.5c-2.7-3.5-7-5.5-12.6-5.5c-6.1,0-11.5,2.2-15.7,6.4c-4.1,4.2-6.4,9.6-6.4,15.5c0,5.8,2.3,11.3,6.4,15.5c4.1,4.2,9.6,6.4,15.4,6.4C488,393.5,496.4,387.5,499.3,378.5"/>
+            <path fill="#000" d="M506.6,385.3h-6v7.2h19.1v-7.2H514v-14.1c0-9.1,3.9-13.8,10.7-13.8c7.8,0,10,4.3,10,13.7v14.3h-5.7v7.2h19.1v-7.2h-6v-16.5c0-6.2-0.8-10.2-4.8-14.2c-2.8-2.8-6.8-4.5-11.4-4.5c-5.5,0-9.3,2.2-12,6.3v-18.7h-13.2v7.1h5.8V385.3"/>
+            <path fill-rule="evenodd" clip-rule="evenodd" fill="#000" d="M592,379.2h-8.5c-3,4.5-7.1,6.9-12,6.9c-6.5,0-12.1-4.4-13.8-11.5h35.3c0.1-1,0.2-2,0.2-3c0-4.4-1.2-8.4-3.6-12.1c-4.1-6.2-10.7-9.7-18.1-9.7c-5.8,0-11.3,2.2-15.4,6.4c-4.1,4.2-6.4,9.6-6.4,15.5c0,5.8,2.3,11.3,6.4,15.5c4.1,4.2,9.6,6.4,15.4,6.4C580.7,393.5,588.5,388.2,592,379.2 M558.1,367.6c2.1-6.6,7.2-10.5,13.5-10.5c6.3,0,11.5,3.9,13.4,10.5H558.1z"/>
+            <path fill="#000" d="M602,385.3h-6v7.2h19.1v-7.2h-5.7v-13c0-9.2,3.5-13.6,11.3-13.6v-8.5c-5.4,0.2-9.1,2.3-11.6,7.2v-6.5h-12.9v7.1h5.7V385.3"/>
+            <polyline fill="#0068B7" points="12.1,287.6 12.1,256.2 112.9,229.1 112.9,260.4 12.1,287.6"/>
+            <polyline fill="#0068B7" points="19.8,289.6 49.3,281.7 49.3,297.6 19.8,289.6"/>
+            <polyline fill="#0068B7" points="12.1,341.8 12.1,310.4 112.9,283.3 112.9,314.7 12.1,341.8"/>
+            <polyline fill="#0068B7" points="19.8,343.9 49.3,335.9 49.3,351.8 19.8,343.9"/>
+            <polyline fill="#0068B7" points="12.1,396 12.1,364.6 112.8,337.5 112.8,368.9 12.1,396"/>
+            <polyline fill="#0068B7" points="19.8,398.1 49.3,390.1 49.3,406 19.8,398.1"/>
+          </g>
+        </svg>
+        <strong>Authorised Dealer</strong>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="entry">New Record</button>
+      <button class="tab-btn" data-tab="search">Search History</button>
+    </div>
+
+    <!-- ENTRY TAB -->
+    <div class="tab-panel active" id="entryPanel">
+      <div class="ticket">
+        <div class="ticket-head">
+          <h2>New Service Record</h2>
+          <span class="ticket-no" id="ticketStamp"></span>
+        </div>
+
+        <form id="serviceForm">
+          <p class="section-label">Vehicle &amp; Customer</p>
+          <div class="row2">
+            <div class="field">
+              <label for="date">Date</label>
+              <input type="date" id="date" required>
+            </div>
+            <div class="field">
+              <label for="customerName">Travels / Customer Name <span class="req">*</span></label>
+              <input type="text" id="customerName" placeholder="e.g. Sri Balaji Travels" required>
+            </div>
+          </div>
+          <div class="row2">
+            <div class="field">
+              <label for="vehicleNumber">Vehicle Number <span class="req">*</span></label>
+              <input type="text" id="vehicleNumber" placeholder="e.g. AP21 TA 1234" required style="text-transform:uppercase;">
+            </div>
+            <div class="field">
+              <label for="vehicleKM">Vehicle Kilometer <span class="req">*</span></label>
+              <input type="number" id="vehicleKM" placeholder="e.g. 145000" required>
+            </div>
+          </div>
+
+          <hr class="divider">
+
+          <p class="section-label">Unit Details</p>
+          <div class="row2">
+            <div class="field">
+              <label for="unitModel">Unit Model</label>
+              <input type="text" id="unitModel" placeholder="e.g. Eberspächer A/C Unit">
+            </div>
+            <div class="field">
+              <label for="unitSerial">Unit Serial Number</label>
+              <input type="text" id="unitSerial" placeholder="e.g. ESP-2024-XXXX">
+            </div>
+          </div>
+
+          <hr class="divider">
+
+          <p class="section-label">Work Done</p>
+          <div class="field">
+            <label for="complaint">Complaint</label>
+            <textarea id="complaint" placeholder="Describe the reported issue"></textarea>
+          </div>
+          <div class="row2">
+            <div class="field">
+              <label for="partName">Part Name</label>
+              <input type="text" id="partName" placeholder="e.g. Compressor">
+            </div>
+            <div class="field">
+              <label for="changedPart">Change of Part Name</label>
+              <input type="text" id="changedPart" placeholder="e.g. Compressor (New)">
+            </div>
+          </div>
+
+          <button type="submit" id="submitBtn">Review Before Saving</button>
+        </form>
+
+        <div class="review" id="reviewPanel">
+          <p class="review-note">Please check the details below carefully — once saved, edits must be made directly in the sheet.</p>
+          <dl class="review-list" id="reviewList"></dl>
+          <div class="review-actions">
+            <button type="button" class="btn-edit" id="editBtn">Edit</button>
+            <button type="button" id="confirmBtn">Confirm &amp; Save</button>
+          </div>
+          <div class="msg" id="msgBox"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEARCH TAB -->
+    <div class="tab-panel" id="searchPanel">
+      <div class="search-panel">
+        <h2>Find Service History</h2>
+        <div class="search-row">
+          <div class="field">
+            <label for="searchVehicleNumber">Vehicle Number</label>
+            <input type="text" id="searchVehicleNumber" placeholder="e.g. AP21 TA 1234">
+          </div>
+          <div class="field">
+            <label for="searchCustomerName">Travels / Customer Name</label>
+            <input type="text" id="searchCustomerName" placeholder="e.g. Sri Balaji Travels">
+          </div>
+        </div>
+        <div class="search-row search-row-dates">
+          <div class="field">
+            <label for="dateFrom">From Date</label>
+            <input type="date" id="dateFrom">
+          </div>
+          <div class="field">
+            <label for="dateTo">To Date</label>
+            <input type="date" id="dateTo">
+          </div>
+        </div>
+        <div class="search-actions">
+          <button class="search-btn" id="searchBtn">Search</button>
+          <button class="export-btn" id="exportBtn">Export to Excel</button>
+          <button class="print-btn" id="printBtn">Print</button>
+        </div>
+      </div>
+
+      <div id="statusLine" class="status-line" style="display:none;"></div>
+      <div id="resultsContainer" class="results"></div>
+    </div>
+  </div>
+
+  <p class="footer">
+    Plot No. 169, N.G.O. Colony, Near Industrial Area, Mydukur Road, Proddatur – 516360, Y.S.R. Kadapa Dist., A.P.<br>
+    ghousebasha55055@gmail.com · 9052155055
+  </p>
+
+  <!-- Print-only view -->
+  <div id="printArea">
+   <div class="print-frame">
+    <div class="print-header">
+      <div class="print-header-left">
+        <p class="print-wordmark">GHOUSE</p>
+        <p class="print-tagline">Bus Airconditioning Works</p>
+        <p class="print-phone"><svg class="wa-icon-print" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path fill="#25D366" d="M16.001 3C9.373 3 4 8.373 4 15c0 2.362.688 4.564 1.875 6.417L4 29l7.771-1.833A11.93 11.93 0 0 0 16.001 27C22.629 27 28 21.627 28 15S22.629 3 16.001 3z"/><path fill="#fff" d="M22.147 19.02c-.31.874-1.54 1.6-2.516 1.807-.667.14-1.538.253-4.474-.962-3.756-1.554-6.176-5.361-6.365-5.609-.181-.248-1.522-2.027-1.522-3.868 0-1.84.964-2.746 1.306-3.121.31-.34.744-.44 1.011-.44.267 0 .534.003.766.014.246.012.577-.093.902.688.31.744 1.052 2.585 1.144 2.774.093.19.155.412.031.66-.124.248-.186.4-.372.617-.186.216-.393.482-.562.648-.186.183-.38.382-.163.752.217.37.965 1.593 2.072 2.582 1.424 1.271 2.626 1.665 2.996 1.851.37.186.586.155.802-.093.217-.248.93-1.084 1.178-1.455.248-.37.496-.31.837-.186.34.124 2.166 1.022 2.537 1.208.37.186.62.279.712.434.093.155.093.897-.217 1.771z"/></svg>9052155055</p>
+      </div>
+      <div class="print-header-right">
+        <svg class="print-logo-svg" xmlns="http://www.w3.org/2000/svg" viewBox="5 212 625 200">
+          <g>
+            <polyline fill="#000" points="176.7,385.2 158.6,385.2 158.6,368.5 176.6,368.5 176.6,361.4 158.6,361.4 158.6,344.9 176.6,344.9 176.6,354 183,354 183,337.8 144.3,337.8 144.3,344.9 150.7,344.9 150.7,385.2 144.3,385.2 144.3,392.5 183.1,392.5 183.1,376.2 176.7,376.2 176.7,385.2"/>
+            <path fill-rule="evenodd" clip-rule="evenodd" fill="#000" d="M193.9,385.3h-5.7v7.2h13.1v-5.2c3.7,4.2,8.4,6.2,14.2,6.2c5.8,0,10.9-2.2,15-6.2c4.1-4.2,6.4-9.5,6.4-15.5c0-5.9-2.2-11.3-6.4-15.5c-4.1-4.1-9.2-6.2-15-6.2c-6.1,0-10.6,1.8-14.2,6v-18.2h-13.2v7.1h5.7V385.3 M201.2,371.7c0-8.4,5.7-14.5,13.9-14.5c7.7,0,14,6.4,14,14.5c0,8.1-6.4,14.5-14,14.5C206.9,386.1,201.2,380.1,201.2,371.7z"/>
+            <path fill-rule="evenodd" clip-rule="evenodd" fill="#000" d="M283.8,379.2h-8.5c-3,4.5-7.1,6.9-12,6.9c-6.5,0-12.1-4.4-13.8-11.5h35.3c0.1-1,0.2-2,0.2-3c0-4.4-1.1-8.4-3.6-12.1c-4.1-6.2-10.7-9.7-18.1-9.7c-5.8,0-11.3,2.2-15.4,6.4c-4.1,4.2-6.4,9.6-6.4,15.5c0,5.8,2.3,11.3,6.4,15.5c4.1,4.2,9.6,6.4,15.4,6.4C272.4,393.5,280.2,388.2,283.8,379.2 M249.8,367.6c2.1-6.6,7.2-10.5,13.5-10.5c6.3,0,11.5,3.9,13.4,10.5H249.8z"/>
+            <path fill="#000" d="M294.6,385.3h-6v7.2h19.1v-7.2H302v-13c0-9.2,3.5-13.6,11.3-13.6v-8.5c-5.4,0.2-9.1,2.3-11.6,7.2v-6.5h-12.9v7.1h5.7V385.3"/>
+            <path fill="#000" d="M318.8,379v13.5h6.9v-2.7c2.4,2.5,5.4,3.6,9.2,3.6c8,0,13.4-5.4,13.4-12.8c0-6.7-3.2-9.9-10.5-12.3c-7-2.3-11.3-2.3-11.3-6.8c0-2.8,2.3-5.1,5.9-5.1c3.5,0,5.8,2,6.3,5.3h7.2v-10.8h-6.4v2.3c-2.2-2.2-4.9-3.2-8-3.2c-7.3,0-12.4,5.1-12.4,12.1c0,4.2,1.7,7.2,5.3,9.5c1.7,1.1,5,1.8,9.7,3.2c4.6,1.3,6.6,2.6,6.6,6.3c0,3.4-2.6,5.5-6.9,5.5c-4.1,0-7-3-7-7.4c0-0.1,0-0.1,0-0.2H318.8"/>
+            <path fill-rule="evenodd" clip-rule="evenodd" fill="#000" d="M358,398.7h-6v7.2h19.6v-7.2h-6.2v-11.4c3.6,4.2,8.1,6.1,14.2,6.1c5.8,0,10.9-2.2,15-6.2c4.1-4.2,6.4-9.5,6.4-15.5c0-5.9-2.2-11.3-6.4-15.5c-4.1-4.1-9.2-6.2-15-6.2c-5.9,0-10.6,2-14.2,6.1v-5.3h-13.1v7.1h5.7V398.7 M365.3,371.7c0-8.4,5.7-14.5,13.9-14.5c7.7,0,14,6.4,14,14.5c0,8.1-6.4,14.5-14,14.5C371,386.1,365.3,380.1,365.3,371.7z"/>
+            <path fill-rule="evenodd" clip-rule="evenodd" fill="#000" d="M418.1,343.4h6.9v-7.8h-6.9V343.4z M431.5,343.4h6.9v-7.8h-6.9V343.4z M447.9,385.3v-27.4h5.7v-7.1h-13.2v5.2c-3.6-4.2-8-5.9-13.8-5.9c-6.4,0-11.2,1.9-15.4,6.2c-4.1,4.2-6.4,9.6-6.4,15.5c0,5.9,2.3,11.3,6.4,15.5c4.1,4.1,9.2,6.2,15,6.2c5.9,0,10.6-2,14.3-6.2v5.2h13.1v-7.2H447.9z M440.6,371.7c0,8.4-5.8,14.5-14,14.5c-7.7,0-13.9-6.3-13.9-14.5c0-8.2,6.3-14.5,13.9-14.5C434.8,357.2,440.6,363.3,440.6,371.7z"/>
+            <path fill="#000" d="M499.3,378.5h-8.4c-2.8,5-7.3,7.6-12.3,7.6c-7.7,0-14-6.4-14-14.5c0-8.1,6.3-14.5,14-14.5c5.2,0,9.5,2.6,12.5,7.6h7.1v-13.9h-6.7v4.5c-2.7-3.5-7-5.5-12.6-5.5c-6.1,0-11.5,2.2-15.7,6.4c-4.1,4.2-6.4,9.6-6.4,15.5c0,5.8,2.3,11.3,6.4,15.5c4.1,4.2,9.6,6.4,15.4,6.4C488,393.5,496.4,387.5,499.3,378.5"/>
+            <path fill="#000" d="M506.6,385.3h-6v7.2h19.1v-7.2H514v-14.1c0-9.1,3.9-13.8,10.7-13.8c7.8,0,10,4.3,10,13.7v14.3h-5.7v7.2h19.1v-7.2h-6v-16.5c0-6.2-0.8-10.2-4.8-14.2c-2.8-2.8-6.8-4.5-11.4-4.5c-5.5,0-9.3,2.2-12,6.3v-18.7h-13.2v7.1h5.8V385.3"/>
+            <path fill-rule="evenodd" clip-rule="evenodd" fill="#000" d="M592,379.2h-8.5c-3,4.5-7.1,6.9-12,6.9c-6.5,0-12.1-4.4-13.8-11.5h35.3c0.1-1,0.2-2,0.2-3c0-4.4-1.2-8.4-3.6-12.1c-4.1-6.2-10.7-9.7-18.1-9.7c-5.8,0-11.3,2.2-15.4,6.4c-4.1,4.2-6.4,9.6-6.4,15.5c0,5.8,2.3,11.3,6.4,15.5c4.1,4.2,9.6,6.4,15.4,6.4C580.7,393.5,588.5,388.2,592,379.2 M558.1,367.6c2.1-6.6,7.2-10.5,13.5-10.5c6.3,0,11.5,3.9,13.4,10.5H558.1z"/>
+            <path fill="#000" d="M602,385.3h-6v7.2h19.1v-7.2h-5.7v-13c0-9.2,3.5-13.6,11.3-13.6v-8.5c-5.4,0.2-9.1,2.3-11.6,7.2v-6.5h-12.9v7.1h5.7V385.3"/>
+            <polyline fill="#0068B7" points="12.1,287.6 12.1,256.2 112.9,229.1 112.9,260.4 12.1,287.6"/>
+            <polyline fill="#0068B7" points="19.8,289.6 49.3,281.7 49.3,297.6 19.8,289.6"/>
+            <polyline fill="#0068B7" points="12.1,341.8 12.1,310.4 112.9,283.3 112.9,314.7 12.1,341.8"/>
+            <polyline fill="#0068B7" points="19.8,343.9 49.3,335.9 49.3,351.8 19.8,343.9"/>
+            <polyline fill="#0068B7" points="12.1,396 12.1,364.6 112.8,337.5 112.8,368.9 12.1,396"/>
+            <polyline fill="#0068B7" points="19.8,398.1 49.3,390.1 49.3,406 19.8,398.1"/>
+          </g>
+        </svg>
+        <span class="print-dealer">Authorised Dealer</span>
+      </div>
+    </div>
+
+    <div class="print-meta-line" id="printMeta"></div>
+
+    <table class="print-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Customer Name</th>
+          <th>Vehicle Number</th>
+          <th>Vehicle KM</th>
+          <th>Unit Model</th>
+          <th>Unit Serial No.</th>
+          <th>Complaint</th>
+          <th>Part Name</th>
+          <th>Changed Part Name</th>
+        </tr>
+      </thead>
+      <tbody id="printTableBody"></tbody>
+    </table>
+
+    <div class="print-footer">
+      <p class="print-doc-name">GHOUSE — Service Records Report</p>
+      Plot No. 169, N.G.O. Colony, Near Industrial Area, Mydukur Road, Proddatur – 516360, Y.S.R. Kadapa Dist., A.P.<br>
+      ghousebasha55055@gmail.com &nbsp;·&nbsp; 9052155055
+    </div>
+   </div>
+  </div>
+
+<script>
+  const API_URL = "https://script.google.com/macros/s/AKfycbxKtYCqoZCJHkxshw2JWpBBhz0qhI-UniXCMJmzcLU07eEqRmOdTNOtUbPA19LXPYKI/exec";
+
+  /* ---------- Tab switching ---------- */
+  const tabBtns = document.querySelectorAll('.tab-btn');
+  const tabPanels = { entry: document.getElementById('entryPanel'), search: document.getElementById('searchPanel') };
+
+  function activateTab(name){
+    tabBtns.forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+    Object.keys(tabPanels).forEach(k => tabPanels[k].classList.toggle('active', k === name));
+    history.replaceState(null, '', '#' + name);
+  }
+  tabBtns.forEach(btn => btn.addEventListener('click', () => activateTab(btn.dataset.tab)));
+  activateTab(location.hash === '#search' ? 'search' : 'entry');
+
+  /* ---------- Entry form logic ---------- */
+  document.getElementById('date').valueAsDate = new Date();
+  document.getElementById('ticketStamp').textContent = new Date().toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+
+  const form = document.getElementById('serviceForm');
+  const msgBox = document.getElementById('msgBox');
+  const reviewPanel = document.getElementById('reviewPanel');
+  const reviewList = document.getElementById('reviewList');
+  const editBtn = document.getElementById('editBtn');
+  const confirmBtn = document.getElementById('confirmBtn');
+
+  function showMsg(text, type){
+    msgBox.textContent = text;
+    msgBox.className = 'msg show ' + type;
+  }
+
+  function currentPayload(){
+    return {
+      Date: document.getElementById('date').value,
+      CustomerName: document.getElementById('customerName').value.trim(),
+      VehicleNumber: document.getElementById('vehicleNumber').value.trim().toUpperCase(),
+      VehicleKM: document.getElementById('vehicleKM').value.trim(),
+      UnitModel: document.getElementById('unitModel').value.trim(),
+      UnitSerialNumber: document.getElementById('unitSerial').value.trim(),
+      Complaint: document.getElementById('complaint').value.trim(),
+      PartName: document.getElementById('partName').value.trim(),
+      ChangedPartName: document.getElementById('changedPart').value.trim()
+    };
+  }
+
+  const FIELD_LABELS = {
+    Date: 'Date', CustomerName: 'Travels / Customer Name', VehicleNumber: 'Vehicle Number',
+    VehicleKM: 'Vehicle Kilometer', UnitModel: 'Unit Model', UnitSerialNumber: 'Unit Serial Number',
+    Complaint: 'Complaint', PartName: 'Part Name', ChangedPartName: 'Changed Part Name'
+  };
+
+  function renderReview(payload){
+    reviewList.innerHTML = '';
+    Object.keys(FIELD_LABELS).forEach(key => {
+      const value = payload[key];
+      const item = document.createElement('div');
+      item.className = 'review-item';
+      item.innerHTML = `<dt>${FIELD_LABELS[key]}</dt><dd class="${value ? '' : 'empty'}">${value ? value : 'Not entered'}</dd>`;
+      reviewList.appendChild(item);
+    });
+  }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    const payload = currentPayload();
+    if (!payload.CustomerName || !payload.VehicleNumber || !payload.VehicleKM){
+      showMsg('Please fill in Customer Name, Vehicle Number and Vehicle Kilometer — these are required.', 'err');
+      return;
+    }
+    renderReview(payload);
+    form.style.display = 'none';
+    reviewPanel.classList.add('show');
+    msgBox.className = 'msg';
+    window.scrollTo({ top: reviewPanel.offsetTop - 20, behavior: 'smooth' });
+  });
+
+  editBtn.addEventListener('click', function(){
+    reviewPanel.classList.remove('show');
+    form.style.display = 'block';
+    msgBox.className = 'msg';
+  });
+
+  confirmBtn.addEventListener('click', async function(){
+    confirmBtn.disabled = true;
+    editBtn.disabled = true;
+    confirmBtn.textContent = 'Saving...';
+    msgBox.className = 'msg';
+    const payload = currentPayload();
+    try {
+      const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+      const data = await res.json();
+      if (data.success) {
+        showMsg('Record saved successfully.', 'ok');
+        form.reset();
+        document.getElementById('date').valueAsDate = new Date();
+        setTimeout(() => {
+          reviewPanel.classList.remove('show');
+          form.style.display = 'block';
+          msgBox.className = 'msg';
+        }, 1400);
+      } else {
+        showMsg('Could not save: ' + (data.message || 'Unknown error'), 'err');
+      }
+    } catch (err) {
+      showMsg('Network error — please check your connection and try again.', 'err');
+    } finally {
+      confirmBtn.disabled = false;
+      editBtn.disabled = false;
+      confirmBtn.textContent = 'Confirm & Save';
+    }
+  });
+
+  /* ---------- Search / Export / Print logic ---------- */
+  const vehicleInput = document.getElementById('searchVehicleNumber');
+  const customerInput = document.getElementById('searchCustomerName');
+  const dateFromInput = document.getElementById('dateFrom');
+  const dateToInput = document.getElementById('dateTo');
+  const searchBtn = document.getElementById('searchBtn');
+  const exportBtn = document.getElementById('exportBtn');
+  const printBtn = document.getElementById('printBtn');
+  const statusLine = document.getElementById('statusLine');
+  const resultsContainer = document.getElementById('resultsContainer');
+  const printTableBody = document.getElementById('printTableBody');
+  const printMeta = document.getElementById('printMeta');
+
+  const SHEET_COLUMNS = ['Date','CustomerName','VehicleNumber','VehicleKM','UnitModel','UnitSerialNumber','Complaint','PartName','ChangedPartName'];
+  const SHEET_HEADERS = ['Date','CustomerName','VehicleNumber','VehicleKM','UnitModel','UnitSerialNumber','Complaint','PartName','ChangedPartName'];
+
+  let currentRecords = [];
+
+  function formatDate(d){
+    if(!d) return '—';
+    const dateObj = new Date(d);
+    if(isNaN(dateObj)) return d;
+    return dateObj.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+  }
+
+  function rawDate(d){
+    if(!d) return '';
+    const dateObj = new Date(d);
+    if(isNaN(dateObj)) return d;
+    return dateObj.toISOString().slice(0,10);
+  }
+
+  function renderRecords(records){
+    resultsContainer.innerHTML = '';
+    if (records.length === 0){
+      resultsContainer.innerHTML = '<div class="empty-state">No service records found. Try different search or date filters.</div>';
+      return;
+    }
+    records.forEach(r => {
+      const card = document.createElement('div');
+      card.className = 'record';
+      card.innerHTML = `
+        <div class="record-top">
+          <span class="record-vehicle">${r.VehicleNumber || '—'}</span>
+          <span class="record-date">${formatDate(r.Date)}</span>
+        </div>
+        <dl class="record-grid">
+          <div><dt>Customer</dt><dd>${r.CustomerName || '—'}</dd></div>
+          <div><dt>Vehicle KM</dt><dd>${r.VehicleKM || '—'}</dd></div>
+          <div><dt>Unit Model</dt><dd>${r.UnitModel || '—'}</dd></div>
+          <div><dt>Unit Serial No.</dt><dd>${r.UnitSerialNumber || '—'}</dd></div>
+          <div><dt>Part Name</dt><dd>${r.PartName || '—'}</dd></div>
+          <div><dt>Changed Part</dt><dd>${r.ChangedPartName || '—'}</dd></div>
+          <div class="record-complaint"><dt>Complaint</dt><dd>${r.Complaint || '—'}</dd></div>
+        </dl>`;
+      resultsContainer.appendChild(card);
+    });
+  }
+
+  async function runSearch(){
+    const vehicleNumber = vehicleInput.value.trim();
+    const customerName = customerInput.value.trim();
+    const dateFrom = dateFromInput.value;
+    const dateTo = dateToInput.value;
+
+    searchBtn.disabled = true;
+    searchBtn.textContent = 'Searching...';
+    statusLine.style.display = 'block';
+    statusLine.textContent = 'Searching...';
+    resultsContainer.innerHTML = '<div class="loading-state">Loading service records…</div>';
+
+    try {
+      const params = new URLSearchParams({ action: 'search', vehicleNumber, customerName, dateFrom, dateTo });
+      const res = await fetch(`${API_URL}?${params.toString()}`);
+      const data = await res.json();
+      if (data.success){
+        currentRecords = data.records;
+        statusLine.innerHTML = `<span class="count">${data.records.length}</span> record(s) found`;
+        renderRecords(data.records);
+      } else {
+        currentRecords = [];
+        statusLine.textContent = 'Search failed';
+        resultsContainer.innerHTML = '<div class="empty-state">Something went wrong. Please try again.</div>';
+      }
+    } catch (err) {
+      currentRecords = [];
+      statusLine.textContent = 'Network error';
+      resultsContainer.innerHTML = '<div class="empty-state">Network error — please check your connection and try again.</div>';
+    } finally {
+      searchBtn.disabled = false;
+      searchBtn.textContent = 'Search';
+    }
+  }
+
+  function exportToExcel(){
+    if (currentRecords.length === 0){ alert('No records to export. Run a search first.'); return; }
+    const rows = currentRecords.map(r => SHEET_COLUMNS.map(col => col === 'Date' ? rawDate(r[col]) : (r[col] || '')));
+    const sheetData = [SHEET_HEADERS, ...rows];
+    const ws = XLSX.utils.aoa_to_sheet(sheetData);
+    ws['!cols'] = [{wch:12},{wch:22},{wch:16},{wch:12},{wch:18},{wch:18},{wch:30},{wch:18},{wch:20}];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'ServiceRecords');
+    const stamp = new Date().toISOString().slice(0,10);
+    XLSX.writeFile(wb, `GHOUSE_ServiceRecords_${stamp}.xlsx`);
+  }
+
+  function printRecords(){
+    if (currentRecords.length === 0){ alert('No records to print. Run a search first.'); return; }
+    printTableBody.innerHTML = currentRecords.map(r => `
+      <tr>
+        <td>${formatDate(r.Date)}</td>
+        <td>${r.CustomerName || ''}</td>
+        <td>${r.VehicleNumber || ''}</td>
+        <td>${r.VehicleKM || ''}</td>
+        <td>${r.UnitModel || ''}</td>
+        <td>${r.UnitSerialNumber || ''}</td>
+        <td>${r.Complaint || ''}</td>
+        <td>${r.PartName || ''}</td>
+        <td>${r.ChangedPartName || ''}</td>
+      </tr>`).join('');
+
+    const filterBits = [];
+    if (vehicleInput.value.trim()) filterBits.push(`Vehicle: ${vehicleInput.value.trim()}`);
+    if (customerInput.value.trim()) filterBits.push(`Customer: ${customerInput.value.trim()}`);
+    if (dateFromInput.value) filterBits.push(`From: ${formatDate(dateFromInput.value)}`);
+    if (dateToInput.value) filterBits.push(`To: ${formatDate(dateToInput.value)}`);
+    printMeta.innerHTML = `<strong>${filterBits.length ? filterBits.join(' · ') : 'All records'}</strong> &nbsp;·&nbsp; Printed: ${formatDate(new Date())} &nbsp;·&nbsp; ${currentRecords.length} record(s)`;
+    window.print();
+  }
+
+  searchBtn.addEventListener('click', runSearch);
+  exportBtn.addEventListener('click', exportToExcel);
+  printBtn.addEventListener('click', printRecords);
+  [vehicleInput, customerInput, dateFromInput, dateToInput].forEach(input => {
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') runSearch(); });
+  });
+
+  runSearch();
+
+  /* ---------- PWA service worker (optional, safe no-op if file missing) ---------- */
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+</script>
+
+</body>
+</html>
