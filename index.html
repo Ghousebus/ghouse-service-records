@@ -19,6 +19,8 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <style>
   :root{
     --cream:#FBF8F2;
@@ -407,8 +409,22 @@
   .admin-msg.ok{background:var(--ok-bg);color:var(--ok-ink);border:1px solid var(--ok-ink);}
   .admin-msg.err{background:var(--err-bg);color:var(--err-ink);border:1px solid var(--err-ink);}
 
+  /* Quotes line-items table */
+  #qItemsTable input, #qItemsTable textarea{
+    width:100%;border:1.5px solid var(--rule);background:var(--cream);
+    padding:7px 8px;font-family:'Inter',sans-serif;font-size:13px;color:var(--ink);border-radius:2px;
+  }
+  #qItemsTable input:focus, #qItemsTable textarea:focus{outline:none;border-color:var(--steel);background:#fff;}
+  #qItemsTable .q-amount{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;white-space:nowrap;}
+  .q-remove-btn{
+    width:auto;padding:6px 10px;font-size:16px;line-height:1;border-radius:2px;
+    background:var(--panel);color:var(--err-ink);border:1.5px solid var(--rule);cursor:pointer;
+  }
+  .q-remove-btn:hover{border-color:var(--err-ink);}
+
   /* Print view */
   #printArea{display:none;}
+  #quotePrintArea{display:none;}
   .print-frame{border:2px solid #000;padding:18px 22px;}
   .print-header{
     display:flex;justify-content:space-between;align-items:flex-start;
@@ -462,12 +478,12 @@
   }
 
   @media print{
-    body > *:not(#printArea){display:none !important;}
+    body > *:not(#printArea):not(#quotePrintArea){display:none !important;}
     html, body{height:auto !important;margin:0 !important;padding:0 !important;background:#fff !important;}
-    #printArea{display:block !important;width:100%;}
     @page{size:landscape;margin:10mm;}
   }
 </style>
+<style id="dynamicPageStyle"></style>
 </head>
 <body>
 
@@ -538,6 +554,7 @@
       <button class="tab-btn active" data-tab="entry">New Record</button>
       <button class="tab-btn" data-tab="search">Search History</button>
       <button class="tab-btn" data-tab="admin" id="adminTabBtn" style="display:none;">Admin</button>
+      <button class="tab-btn" data-tab="quotes" id="quotesTabBtn" style="display:none;">Quotes</button>
     </div>
 
     <!-- ENTRY TAB -->
@@ -688,6 +705,101 @@
         </table>
       </div>
     </div>
+
+    <!-- QUOTES TAB (admin only) -->
+    <div class="tab-panel" id="quotesPanel">
+      <div class="admin-panel" id="qHeaderPanel">
+        <h2>New Quote</h2>
+        <div class="row2">
+          <div class="field">
+            <label for="qNumber">Quote Number</label>
+            <input type="text" id="qNumber" placeholder="e.g. GHOUSE-EST-001">
+          </div>
+          <div class="field">
+            <label for="qDate">Quote Date</label>
+            <input type="date" id="qDate">
+          </div>
+        </div>
+        <div class="field">
+          <label for="qPlaceOfSupply">Place of Supply</label>
+          <input type="text" id="qPlaceOfSupply" placeholder="e.g. Andhra Pradesh (37)">
+        </div>
+
+        <hr class="divider">
+        <p class="section-label">Bill To</p>
+        <div class="field">
+          <label for="qBillName">Customer / Organisation Name</label>
+          <input type="text" id="qBillName" placeholder="e.g. Public Transport Department, Govt of AP">
+        </div>
+        <div class="field">
+          <label for="qBillAddress">Billing Address</label>
+          <textarea id="qBillAddress" placeholder="Full billing address"></textarea>
+        </div>
+        <div class="field">
+          <label for="qBillGSTIN">Customer GSTIN (optional)</label>
+          <input type="text" id="qBillGSTIN" placeholder="e.g. 37AAAGP3279H1Z1">
+        </div>
+
+        <hr class="divider">
+        <p class="section-label">Ship To (optional)</p>
+        <div class="field">
+          <label for="qShipTo">Ship To Details</label>
+          <textarea id="qShipTo" placeholder="e.g. The Depot Manager, APPTD, Nellore-1"></textarea>
+        </div>
+      </div>
+
+      <div class="admin-panel" id="qLineItemsPanel" style="margin-top:16px;">
+        <h2>Line Items</h2>
+        <p style="font-size:12.5px;color:var(--ink-soft);margin:-8px 0 14px;">GST% applies per line and is auto-split into CGST + SGST for the final quote.</p>
+        <table class="user-table" id="qItemsTable">
+          <thead>
+            <tr>
+              <th style="width:30%;">Description</th>
+              <th style="width:12%;">HSN/SAC</th>
+              <th style="width:8%;">Qty</th>
+              <th style="width:9%;">Unit</th>
+              <th style="width:12%;">Rate</th>
+              <th style="width:9%;">GST%</th>
+              <th style="width:14%;">Amount</th>
+              <th style="width:6%;"></th>
+            </tr>
+          </thead>
+          <tbody id="qItemsBody"></tbody>
+        </table>
+        <div class="search-actions" style="margin-top:14px;">
+          <button type="button" class="print-btn" id="qAddRowBtn" style="flex:none;min-width:140px;">+ Add Row</button>
+        </div>
+
+        <div class="review-list" style="margin-top:20px;">
+          <div class="review-item"><dt>Sub Total</dt><dd id="qSubTotal">₹0.00</dd></div>
+          <div class="review-item"><dt>CGST Total</dt><dd id="qCgstTotal">₹0.00</dd></div>
+          <div class="review-item"><dt>SGST Total</dt><dd id="qSgstTotal">₹0.00</dd></div>
+          <div class="review-item"><dt style="font-size:15px;">Grand Total</dt><dd style="font-size:16px;font-weight:700;" id="qGrandTotal">₹0.00</dd></div>
+        </div>
+        <p style="font-size:13px;color:var(--ink-soft);font-style:italic;margin-top:10px;" id="qAmountWords"></p>
+      </div>
+
+      <div class="search-actions" style="margin-top:16px;">
+        <button class="search-btn" id="qPreviewBtn">Preview Quote</button>
+      </div>
+      <div class="admin-msg" id="qMsg"></div>
+
+      <!-- QUOTE PREVIEW (white document view) -->
+      <div id="qPreviewWrap" style="display:none;margin-top:22px;">
+        <div id="qPreviewDoc" style="background:#FFFFFF;border:1.5px solid var(--ink);padding:26px 30px;color:#111;"></div>
+
+        <div class="search-actions" style="margin-top:16px;" id="qReviewActions">
+          <button type="button" class="btn-edit" id="qEditBtn" style="flex:1;">Edit Quote</button>
+          <button type="button" id="qSubmitBtn" style="flex:1;">Submit Quote</button>
+        </div>
+
+        <div class="search-actions" style="margin-top:16px;display:none;" id="qFinalActions">
+          <button class="export-btn" id="qDownloadPdfBtn">Download PDF</button>
+          <button class="search-btn" id="qDownloadWordBtn">Download Word</button>
+          <button class="print-btn" id="qPrintBtn">Print</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <p class="footer">
@@ -759,6 +871,9 @@
    </div>
   </div>
 
+  <!-- Print-only view for Quotes (kept separate so it never overwrites the service-records print template) -->
+  <div id="quotePrintArea" class="print-target"></div>
+
 <script>
   /* ---------- Firebase init ---------- */
   const firebaseConfig = {
@@ -814,6 +929,7 @@
       currentRole = tokenResult.claims.role || 'user';
       sessionUsername.textContent = user.displayName || user.email.replace('@ghouse.local', '');
       adminTabBtn.style.display = currentRole === 'admin' ? '' : 'none';
+      quotesTabBtn.style.display = currentRole === 'admin' ? '' : 'none';
 
       loginScreen.style.display = 'none';
       appShell.style.display = 'block';
@@ -829,16 +945,17 @@
 
   /* ---------- Tab switching ---------- */
   const tabBtns = document.querySelectorAll('.tab-btn');
-  const tabPanels = { entry: document.getElementById('entryPanel'), search: document.getElementById('searchPanel'), admin: document.getElementById('adminPanel') };
+  const quotesTabBtn = document.getElementById('quotesTabBtn');
+  const tabPanels = { entry: document.getElementById('entryPanel'), search: document.getElementById('searchPanel'), admin: document.getElementById('adminPanel'), quotes: document.getElementById('quotesPanel') };
 
   function activateTab(name){
-    if (name === 'admin' && currentRole !== 'admin') name = 'entry';
+    if ((name === 'admin' || name === 'quotes') && currentRole !== 'admin') name = 'entry';
     tabBtns.forEach(b => b.classList.toggle('active', b.dataset.tab === name));
     Object.keys(tabPanels).forEach(k => tabPanels[k].classList.toggle('active', k === name));
     history.replaceState(null, '', '#' + name);
   }
   tabBtns.forEach(btn => btn.addEventListener('click', () => activateTab(btn.dataset.tab)));
-  activateTab(location.hash === '#search' ? 'search' : (location.hash === '#admin' ? 'admin' : 'entry'));
+  activateTab(location.hash === '#search' ? 'search' : (location.hash === '#admin' ? 'admin' : (location.hash === '#quotes' ? 'quotes' : 'entry')));
 
   /* ---------- Entry form logic ---------- */
   document.getElementById('date').valueAsDate = new Date();
@@ -1065,7 +1182,13 @@
     if (dateFromInput.value) filterBits.push(`From: ${formatDate(dateFromInput.value)}`);
     if (dateToInput.value) filterBits.push(`To: ${formatDate(dateToInput.value)}`);
     printMeta.innerHTML = `<strong>${filterBits.length ? filterBits.join(' · ') : 'All records'}</strong> &nbsp;·&nbsp; Printed: ${formatDate(new Date())} &nbsp;·&nbsp; ${currentRecords.length} record(s)`;
+    const printArea = document.getElementById('printArea');
+    printArea.style.display = 'block';
     window.print();
+    window.addEventListener('afterprint', function resetPrint(){
+      printArea.style.display = 'none';
+      window.removeEventListener('afterprint', resetPrint);
+    });
   }
 
   searchBtn.addEventListener('click', runSearch);
@@ -1166,6 +1289,423 @@
       showAdminMsg('Could not delete user: ' + (err.message || 'Unknown error'), 'err');
     }
   };
+
+  /* ---------- Quotes logic ---------- */
+  const GHOUSE_GSTIN = '37AJTPB5882D1ZX';
+  const GHOUSE_BANK = {
+    accountName: 'GHOUSE Bus Airconditioning Works',
+    accountNo: '7899351681',
+    ifsc: 'IDIB000M403',
+    bankName: 'Indian Bank',
+    branch: 'Mydukur Road Branch, Proddatur'
+  };
+  const GHOUSE_TERMS = [
+    'Additional Materials: Any materials used during the course of work, other than those specified in the quotation or agreement, shall be charged separately at actual cost.',
+    'Gas Usage for AC Units: For refilling AC units, it is mandatory to use a full 10 kg cylinder. The use of small tins (400 gms) is strongly discouraged and not recommended.',
+    'Warranty Limitation: If small tins (400 gms) are used for gas refilling, the warranty of three (3) months on the compressor shall not be applicable.'
+  ];
+
+  document.getElementById('qDate').valueAsDate = new Date();
+
+  const qItemsBody = document.getElementById('qItemsBody');
+  const qAddRowBtn = document.getElementById('qAddRowBtn');
+  let qRowCounter = 0;
+
+  function qCreateRow(){
+    qRowCounter++;
+    const tr = document.createElement('tr');
+    tr.dataset.rowId = qRowCounter;
+    tr.innerHTML = `
+      <td><textarea class="q-desc" rows="1" placeholder="Item description"></textarea></td>
+      <td><input type="text" class="q-hsn" placeholder="HSN/SAC"></td>
+      <td><input type="number" class="q-qty" value="1" step="0.01"></td>
+      <td><input type="text" class="q-unit" placeholder="pcs" value="pcs"></td>
+      <td><input type="number" class="q-rate" value="0" step="0.01"></td>
+      <td><input type="number" class="q-gst" value="18" step="0.01"></td>
+      <td class="q-amount">₹0.00</td>
+      <td><button type="button" class="q-remove-btn" title="Remove row">×</button></td>
+    `;
+    tr.querySelectorAll('input').forEach(inp => inp.addEventListener('input', qRecalculate));
+    tr.querySelector('.q-remove-btn').addEventListener('click', () => { tr.remove(); qRecalculate(); });
+    qItemsBody.appendChild(tr);
+  }
+
+  qAddRowBtn.addEventListener('click', qCreateRow);
+  for (let i = 0; i < 4; i++) qCreateRow(); // start with 4 editable rows, ready to fill in
+
+  function qGetItems(){
+    return Array.from(qItemsBody.querySelectorAll('tr')).map(tr => {
+      const qty = parseFloat(tr.querySelector('.q-qty').value) || 0;
+      const rate = parseFloat(tr.querySelector('.q-rate').value) || 0;
+      const gstPct = parseFloat(tr.querySelector('.q-gst').value) || 0;
+      const cgstPct = gstPct / 2;
+      const sgstPct = gstPct / 2;
+      const amount = qty * rate;
+      return {
+        description: tr.querySelector('.q-desc').value.trim(),
+        hsn: tr.querySelector('.q-hsn').value.trim(),
+        qty, unit: tr.querySelector('.q-unit').value.trim() || 'pcs',
+        rate, gstPct, cgstPct, sgstPct,
+        cgstAmt: amount * cgstPct / 100,
+        sgstAmt: amount * sgstPct / 100,
+        amount
+      };
+    });
+  }
+
+  function qFormatCurrency(n){
+    return '₹' + n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  // Indian numbering system (Lakh/Crore) number-to-words converter
+  function qNumberToWords(num){
+    const ones = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
+    const tens = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+
+    function twoDigits(n){
+      if (n < 20) return ones[n];
+      return tens[Math.floor(n/10)] + (n%10 ? ' ' + ones[n%10] : '');
+    }
+    function threeDigits(n){
+      if (n < 100) return twoDigits(n);
+      return ones[Math.floor(n/100)] + ' Hundred' + (n%100 ? ' ' + twoDigits(n%100) : '');
+    }
+    function convert(n){
+      if (n === 0) return 'Zero';
+      let result = '';
+      const crore = Math.floor(n / 10000000); n %= 10000000;
+      const lakh = Math.floor(n / 100000); n %= 100000;
+      const thousand = Math.floor(n / 1000); n %= 1000;
+      const hundred = n;
+      if (crore) result += threeDigits(crore) + ' Crore ';
+      if (lakh) result += threeDigits(lakh) + ' Lakh ';
+      if (thousand) result += threeDigits(thousand) + ' Thousand ';
+      if (hundred) result += threeDigits(hundred);
+      return result.trim();
+    }
+
+    const rupees = Math.floor(num);
+    const paise = Math.round((num - rupees) * 100);
+    let words = 'Indian Rupee ' + convert(rupees);
+    if (paise > 0) words += ' and ' + convert(paise) + ' Paise';
+    return words + ' Only';
+  }
+
+  function qRecalculate(){
+    const items = qGetItems();
+    const subTotal = items.reduce((s, i) => s + i.amount, 0);
+    const cgstTotal = items.reduce((s, i) => s + i.cgstAmt, 0);
+    const sgstTotal = items.reduce((s, i) => s + i.sgstAmt, 0);
+    const grandTotal = subTotal + cgstTotal + sgstTotal;
+
+    Array.from(qItemsBody.querySelectorAll('tr')).forEach((tr, idx) => {
+      tr.querySelector('.q-amount').textContent = qFormatCurrency(items[idx].amount);
+    });
+
+    document.getElementById('qSubTotal').textContent = qFormatCurrency(subTotal);
+    document.getElementById('qCgstTotal').textContent = qFormatCurrency(cgstTotal);
+    document.getElementById('qSgstTotal').textContent = qFormatCurrency(sgstTotal);
+    document.getElementById('qGrandTotal').textContent = qFormatCurrency(grandTotal);
+    document.getElementById('qAmountWords').textContent = qNumberToWords(grandTotal);
+
+    return { items, subTotal, cgstTotal, sgstTotal, grandTotal };
+  }
+  qRecalculate();
+
+  function qGetHeaderData(){
+    return {
+      number: document.getElementById('qNumber').value.trim() || 'GHOUSE-EST-001',
+      date: document.getElementById('qDate').value,
+      placeOfSupply: document.getElementById('qPlaceOfSupply').value.trim(),
+      billName: document.getElementById('qBillName').value.trim(),
+      billAddress: document.getElementById('qBillAddress').value.trim(),
+      billGSTIN: document.getElementById('qBillGSTIN').value.trim(),
+      shipTo: document.getElementById('qShipTo').value.trim()
+    };
+  }
+
+  const qMsg = document.getElementById('qMsg');
+  function showQMsg(text, type){
+    qMsg.textContent = text;
+    qMsg.className = 'admin-msg show ' + type;
+  }
+
+  function qBuildDocHtml(header, calc){
+    const { items, subTotal, cgstTotal, sgstTotal, grandTotal } = calc;
+    const itemRows = items.map((it, idx) => `
+      <tr>
+        <td style="padding:6px;border:1px solid #ccc;">${idx+1}</td>
+        <td style="padding:6px;border:1px solid #ccc;">${it.description || '—'}</td>
+        <td style="padding:6px;border:1px solid #ccc;">${it.hsn || '—'}</td>
+        <td style="padding:6px;border:1px solid #ccc;text-align:center;">${it.qty}</td>
+        <td style="padding:6px;border:1px solid #ccc;text-align:center;">${it.unit}</td>
+        <td style="padding:6px;border:1px solid #ccc;text-align:right;">${it.rate.toFixed(2)}</td>
+        <td style="padding:6px;border:1px solid #ccc;text-align:center;">${it.cgstPct}%</td>
+        <td style="padding:6px;border:1px solid #ccc;text-align:center;">${it.sgstPct}%</td>
+        <td style="padding:6px;border:1px solid #ccc;text-align:right;">${it.amount.toFixed(2)}</td>
+      </tr>`).join('');
+
+    return `
+      <div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#111;">
+        <table width="100%" style="border-collapse:collapse;"><tr>
+          <td style="vertical-align:top;">
+            <div style="font-weight:800;font-size:22px;color:#E0621B;letter-spacing:2px;">GHOUSE</div>
+            <div style="font-weight:700;">Bus Airconditioning Works</div>
+            <div style="font-size:12px;margin-top:2px;">GSTIN: ${GHOUSE_GSTIN}</div>
+            <div style="font-size:12px;">Plot No. 169, N.G.O. Colony, Near Industrial Area, Mydukur Road, Proddatur - 516360, A.P.</div>
+          </td>
+          <td style="vertical-align:top;text-align:right;">
+            <div style="font-weight:800;font-size:20px;">QUOTE</div>
+            <div style="font-size:12px;"># ${header.number}</div>
+            <div style="font-size:12px;">Date: ${header.date ? new Date(header.date).toLocaleDateString('en-IN') : ''}</div>
+            ${header.placeOfSupply ? '<div style="font-size:12px;">Place of Supply: ' + header.placeOfSupply + '</div>' : ''}
+          </td>
+        </tr></table>
+        <hr style="border:none;border-top:2px solid #111;margin:14px 0;">
+        <table width="100%" style="border-collapse:collapse;"><tr>
+          <td style="vertical-align:top;width:50%;font-size:12.5px;">
+            <div style="font-weight:700;margin-bottom:4px;">Bill To</div>
+            <div>${header.billName || '—'}</div>
+            <div>${(header.billAddress || '').replace(/\n/g,'<br>')}</div>
+            ${header.billGSTIN ? '<div>GSTIN: ' + header.billGSTIN + '</div>' : ''}
+          </td>
+          <td style="vertical-align:top;width:50%;font-size:12.5px;">
+            ${header.shipTo ? '<div style="font-weight:700;margin-bottom:4px;">Ship To</div><div>' + header.shipTo.replace(/\n/g,'<br>') + '</div>' : ''}
+          </td>
+        </tr></table>
+        <br>
+        <table width="100%" style="border-collapse:collapse;font-size:11.5px;">
+          <tr style="background:#E0621B;color:#fff;">
+            <th style="padding:6px;border:1px solid #ccc;">#</th>
+            <th style="padding:6px;border:1px solid #ccc;">Description</th>
+            <th style="padding:6px;border:1px solid #ccc;">HSN/SAC</th>
+            <th style="padding:6px;border:1px solid #ccc;">Qty</th>
+            <th style="padding:6px;border:1px solid #ccc;">Unit</th>
+            <th style="padding:6px;border:1px solid #ccc;">Rate</th>
+            <th style="padding:6px;border:1px solid #ccc;">CGST%</th>
+            <th style="padding:6px;border:1px solid #ccc;">SGST%</th>
+            <th style="padding:6px;border:1px solid #ccc;">Amount</th>
+          </tr>
+          ${itemRows}
+        </table>
+        <br>
+        <table width="100%"><tr><td></td><td style="text-align:right;font-size:12.5px;width:260px;">
+          <div>Sub Total: ${qFormatCurrency(subTotal)}</div>
+          <div>CGST: ${qFormatCurrency(cgstTotal)}</div>
+          <div>SGST: ${qFormatCurrency(sgstTotal)}</div>
+          <div style="font-weight:800;font-size:15px;margin-top:4px;">Total: ${qFormatCurrency(grandTotal)}</div>
+        </td></tr></table>
+        <p style="font-style:italic;font-size:12px;border-top:1px dashed #ccc;padding-top:8px;">${qNumberToWords(grandTotal)}</p>
+        <p style="font-size:12px;"><b>Bank Details</b><br>
+        Account Name: ${GHOUSE_BANK.accountName}<br>
+        A/c Number: ${GHOUSE_BANK.accountNo}<br>
+        IFSC Code: ${GHOUSE_BANK.ifsc}<br>
+        Bank: ${GHOUSE_BANK.bankName}, ${GHOUSE_BANK.branch}</p>
+        <p style="font-size:11.5px;"><b>Terms &amp; Conditions</b><br>
+        ${GHOUSE_TERMS.map((t,idx) => (idx+1) + '. ' + t).join('<br>')}</p>
+      </div>`;
+  }
+
+  /* ---------- Preview / Submit / Edit flow ---------- */
+  const qHeaderPanel = document.getElementById('qHeaderPanel');
+  const qLineItemsPanel = document.getElementById('qLineItemsPanel');
+  const qPreviewBtnRow = document.getElementById('qPreviewBtn').parentElement;
+  const qPreviewWrap = document.getElementById('qPreviewWrap');
+  const qPreviewDoc = document.getElementById('qPreviewDoc');
+  const qReviewActions = document.getElementById('qReviewActions');
+  const qFinalActions = document.getElementById('qFinalActions');
+  let qLastHeader = null;
+  let qLastCalc = null;
+
+  document.getElementById('qPreviewBtn').addEventListener('click', function(){
+    const header = qGetHeaderData();
+    const calc = qRecalculate();
+    qMsg.className = 'admin-msg';
+
+    if (!header.billName){
+      showQMsg('Please enter the Bill To name before previewing.', 'err');
+      return;
+    }
+    if (calc.items.every(i => !i.description)){
+      showQMsg('Add at least one line item with a description.', 'err');
+      return;
+    }
+
+    qLastHeader = header;
+    qLastCalc = calc;
+    qPreviewDoc.innerHTML = qBuildDocHtml(header, calc);
+
+    qHeaderPanel.style.display = 'none';
+    qLineItemsPanel.style.display = 'none';
+    qPreviewBtnRow.style.display = 'none';
+    qPreviewWrap.style.display = 'block';
+    qReviewActions.style.display = 'flex';
+    qFinalActions.style.display = 'none';
+    window.scrollTo({ top: qPreviewWrap.offsetTop - 20, behavior: 'smooth' });
+  });
+
+  document.getElementById('qEditBtn').addEventListener('click', function(){
+    qHeaderPanel.style.display = 'block';
+    qLineItemsPanel.style.display = 'block';
+    qPreviewBtnRow.style.display = 'flex';
+    qPreviewWrap.style.display = 'none';
+    qMsg.className = 'admin-msg';
+  });
+
+  document.getElementById('qSubmitBtn').addEventListener('click', function(){
+    qReviewActions.style.display = 'none';
+    qFinalActions.style.display = 'flex';
+    showQMsg('Quote finalized. Download or print below.', 'ok');
+  });
+
+  /* ---------- Print (dedicated container, never overwrites service-records print template) ---------- */
+  document.getElementById('qPrintBtn').addEventListener('click', function(){
+    if (!qLastHeader) return;
+    const quotePrintArea = document.getElementById('quotePrintArea');
+    quotePrintArea.innerHTML = qBuildDocHtml(qLastHeader, qLastCalc);
+    document.getElementById('dynamicPageStyle').textContent = '@page{size:portrait;margin:15mm;}';
+    quotePrintArea.style.display = 'block';
+    window.print();
+    window.addEventListener('afterprint', function resetPrint(){
+      quotePrintArea.style.display = 'none';
+      document.getElementById('dynamicPageStyle').textContent = '';
+      window.removeEventListener('afterprint', resetPrint);
+    });
+  });
+
+  /* ---------- PDF generation ---------- */
+  document.getElementById('qDownloadPdfBtn').addEventListener('click', function(){
+    const header = qLastHeader || qGetHeaderData();
+    const calc = qLastCalc || qRecalculate();
+    const { items, subTotal, cgstTotal, sgstTotal, grandTotal } = calc;
+
+    if (items.length === 0 || !header.billName){
+      showQMsg('Please enter at least the Bill To name and one line item.', 'err');
+      return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.text('GHOUSE', 14, 18);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Bus Airconditioning Works', 14, 24);
+    doc.text('GSTIN: ' + GHOUSE_GSTIN, 14, 29);
+    doc.text('Plot No. 169, N.G.O. Colony, Near Industrial Area, Mydukur Road, Proddatur - 516360, A.P.', 14, 34);
+
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('QUOTE', 196, 18, { align: 'right' });
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('# ' + header.number, 196, 26, { align: 'right' });
+    doc.text('Date: ' + (header.date ? new Date(header.date).toLocaleDateString('en-IN') : ''), 196, 31, { align: 'right' });
+    if (header.placeOfSupply) doc.text('Place of Supply: ' + header.placeOfSupply, 196, 36, { align: 'right' });
+
+    let y = 45;
+    doc.setDrawColor(150);
+    doc.line(14, y, 196, y);
+    y += 7;
+
+    doc.setFont('helvetica', 'bold');
+    doc.text('Bill To', 14, y);
+    if (header.shipTo) doc.text('Ship To', 105, y);
+    y += 5;
+    doc.setFont('helvetica', 'normal');
+    const billLines = doc.splitTextToSize(header.billName + (header.billAddress ? '\n' + header.billAddress : '') + (header.billGSTIN ? '\nGSTIN: ' + header.billGSTIN : ''), 85);
+    doc.text(billLines, 14, y);
+    if (header.shipTo){
+      const shipLines = doc.splitTextToSize(header.shipTo, 85);
+      doc.text(shipLines, 105, y);
+    }
+    y += Math.max(billLines.length, header.shipTo ? doc.splitTextToSize(header.shipTo, 85).length : 0) * 5 + 8;
+
+    doc.autoTable({
+      startY: y,
+      head: [['#','Description','HSN/SAC','Qty','Unit','Rate','CGST%','SGST%','Amount']],
+      body: items.map((it, idx) => [
+        idx + 1, it.description, it.hsn, it.qty, it.unit,
+        it.rate.toFixed(2), it.cgstPct + '%', it.sgstPct + '%', it.amount.toFixed(2)
+      ]),
+      styles: { fontSize: 8.5, cellPadding: 2 },
+      headStyles: { fillColor: [224, 98, 27] },
+      margin: { left: 14, right: 14 }
+    });
+
+    let finalY = doc.lastAutoTable.finalY + 8;
+    doc.setFont('helvetica', 'normal');
+    doc.text('Sub Total: ' + qFormatCurrency(subTotal), 196, finalY, { align: 'right' });
+    finalY += 5;
+    doc.text('CGST: ' + qFormatCurrency(cgstTotal), 196, finalY, { align: 'right' });
+    finalY += 5;
+    doc.text('SGST: ' + qFormatCurrency(sgstTotal), 196, finalY, { align: 'right' });
+    finalY += 6;
+    doc.setFont('helvetica', 'bold');
+    doc.text('Total: ' + qFormatCurrency(grandTotal), 196, finalY, { align: 'right' });
+    finalY += 8;
+
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(9);
+    const wordsLines = doc.splitTextToSize(qNumberToWords(grandTotal), 180);
+    doc.text(wordsLines, 14, finalY);
+    finalY += wordsLines.length * 4.5 + 8;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.text('Bank Details', 14, finalY);
+    finalY += 5;
+    doc.setFont('helvetica', 'normal');
+    doc.text([
+      'Account Name: ' + GHOUSE_BANK.accountName,
+      'A/c Number: ' + GHOUSE_BANK.accountNo,
+      'IFSC Code: ' + GHOUSE_BANK.ifsc,
+      'Bank: ' + GHOUSE_BANK.bankName + ', ' + GHOUSE_BANK.branch
+    ], 14, finalY);
+    finalY += 22;
+
+    doc.setFont('helvetica', 'bold');
+    doc.text('Terms & Conditions', 14, finalY);
+    finalY += 5;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    GHOUSE_TERMS.forEach((term, idx) => {
+      const lines = doc.splitTextToSize((idx+1) + '. ' + term, 180);
+      doc.text(lines, 14, finalY);
+      finalY += lines.length * 4 + 2;
+    });
+
+    doc.save(`${header.number || 'GHOUSE-Quote'}.pdf`);
+    showQMsg('PDF downloaded.', 'ok');
+  });
+
+  /* ---------- Word (.doc) generation ---------- */
+  document.getElementById('qDownloadWordBtn').addEventListener('click', function(){
+    const header = qLastHeader || qGetHeaderData();
+    const calc = qLastCalc || qRecalculate();
+
+    if (calc.items.length === 0 || !header.billName){
+      showQMsg('Please enter at least the Bill To name and one line item.', 'err');
+      return;
+    }
+
+    const html = qBuildDocHtml(header, calc);
+    const preHtml = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'></head><body>";
+    const postHtml = "</body></html>";
+    const fullHtml = preHtml + html + postHtml;
+    const blob = new Blob(['\ufeff', fullHtml], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${header.number || 'GHOUSE-Quote'}.doc`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showQMsg('Word document downloaded.', 'ok');
+  });
 
   /* ---------- PWA service worker (optional, safe no-op if file missing) ---------- */
   if ('serviceWorker' in navigator) {
