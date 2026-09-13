@@ -14,13 +14,11 @@
 <link rel="icon" href="icons/icon-192.png">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <style>
   :root{
     --cream:#FBF8F2;
@@ -63,8 +61,8 @@
     flex-wrap:wrap;
   }
   .wordmark{
-    font-family:'Bebas Neue',sans-serif;
-    font-weight:400;
+    font-family:'Agency FB','Arial Narrow',sans-serif;
+    font-weight:700;
     font-size:clamp(36px,8vw,50px);
     letter-spacing:6px;
     color:var(--terracotta);
@@ -431,7 +429,7 @@
     border-bottom:3px solid #000;padding-bottom:10px;margin-bottom:12px;
   }
   .print-header-left .print-wordmark{
-    font-family:'Bebas Neue',sans-serif;font-weight:400;font-size:32px;
+    font-family:'Agency FB','Arial Narrow',sans-serif;font-weight:700;font-size:32px;
     letter-spacing:4px;color:var(--terracotta);margin:0;line-height:1;
   }
   .print-header-left .print-tagline{
@@ -794,9 +792,7 @@
         </div>
 
         <div class="search-actions" style="margin-top:16px;display:none;" id="qFinalActions">
-          <button class="export-btn" id="qDownloadPdfBtn">Download PDF</button>
-          <button class="search-btn" id="qDownloadWordBtn">Download Word</button>
-          <button class="print-btn" id="qPrintBtn">Print</button>
+          <button class="print-btn" id="qPrintBtn" style="flex:1;">Print Quote</button>
         </div>
       </div>
     </div>
@@ -1358,6 +1354,10 @@
     return 'Rs. ' + n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
+  function qFormatNumber(n){
+    return n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
   // Indian numbering system (Lakh/Crore) number-to-words converter
   function qNumberToWords(num){
     const ones = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
@@ -1437,17 +1437,17 @@
         <td style="padding:6px;border:1px solid #ccc;text-align:center;">${it.hsn || '—'}</td>
         <td style="padding:6px;border:1px solid #ccc;text-align:center;">${it.qty}</td>
         <td style="padding:6px;border:1px solid #ccc;text-align:center;">${it.unit}</td>
-        <td style="padding:6px;border:1px solid #ccc;text-align:right;">${it.rate.toFixed(2)}</td>
+        <td style="padding:6px;border:1px solid #ccc;text-align:right;">${qFormatNumber(it.rate)}</td>
         <td style="padding:6px;border:1px solid #ccc;text-align:center;">${it.gstPct}%</td>
-        <td style="padding:6px;border:1px solid #ccc;text-align:right;">${it.gstAmt.toFixed(2)}</td>
-        <td style="padding:6px;border:1px solid #ccc;text-align:right;">${it.amount.toFixed(2)}</td>
+        <td style="padding:6px;border:1px solid #ccc;text-align:right;">${qFormatNumber(it.gstAmt)}</td>
+        <td style="padding:6px;border:1px solid #ccc;text-align:right;">${qFormatNumber(it.amount)}</td>
       </tr>`).join('');
 
     return `
       <div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#111;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
         <table width="100%" style="border-collapse:collapse;"><tr>
           <td style="vertical-align:top;">
-            <div style="font-family:'Bebas Neue',sans-serif;font-weight:400;font-size:32px;letter-spacing:4px;color:#F79646;line-height:1;">GHOUSE</div>
+            <div style="font-family:'Agency FB','Arial Narrow',sans-serif;font-weight:700;font-size:32px;letter-spacing:4px;color:#F79646;line-height:1;">GHOUSE</div>
             <div style="font-weight:800;font-size:13px;letter-spacing:0.5px;margin-top:4px;">BUS AIRCONDITIONING WORKS</div>
             <div style="font-size:11.5px;margin-top:6px;display:flex;gap:5px;align-items:flex-start;">
               <img src="${PIN_ICON_DATA_URI}" width="12" height="12" style="margin-top:2px;flex-shrink:0;" alt="">
@@ -1595,193 +1595,6 @@
       document.getElementById('dynamicPageStyle').textContent = '';
       window.removeEventListener('afterprint', resetPrint);
     });
-  });
-
-  /* ---------- PDF generation ---------- */
-  document.getElementById('qDownloadPdfBtn').addEventListener('click', function(){
-    const header = qLastHeader || qGetHeaderData();
-    const calc = qLastCalc || qRecalculate();
-    const { items, subTotal, gstTotal, grandTotal } = calc;
-
-    if (items.length === 0 || !header.billName){
-      showQMsg('Please enter at least the Bill To name and one line item.', 'err');
-      return;
-    }
-
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    const BRAND = [247, 150, 70]; // #F79646
-
-    // Helper: draws an icon + text as a single right-aligned group ending exactly at xRight
-    function drawIconTextRight(iconUri, text, xRight, y, iconSize){
-      const gap = 1.6;
-      const textWidth = doc.getTextWidth(text);
-      const totalWidth = iconSize + gap + textWidth;
-      const startX = xRight - totalWidth;
-      try { doc.addImage(iconUri, 'PNG', startX, y - iconSize + 1.2, iconSize, iconSize); } catch(e) {}
-      doc.text(text, startX + iconSize + gap, y);
-    }
-
-    // Left header block
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(20);
-    doc.setTextColor(BRAND[0], BRAND[1], BRAND[2]);
-    doc.text('GHOUSE', 14, 18);
-    doc.setTextColor(20, 20, 20);
-    doc.setFontSize(10.5);
-    doc.text('BUS AIRCONDITIONING WORKS', 14, 25);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    try { doc.addImage(PIN_ICON_DATA_URI, 'PNG', 14, 28.2, 3, 3); } catch(e) {}
-    doc.text('Plot No. 169, N.G.O. Colony, Near Industrial Area,', 19, 31);
-    doc.text('Mydukur Road, Proddatur, AP - 516360', 19, 35.5);
-    doc.setFont('helvetica', 'bold');
-    doc.text('GSTIN: ' + GHOUSE_GSTIN, 14, 41);
-
-    // Right header block: Eberspächer logo + Authorised Dealer + phone + email
-    try { doc.addImage(EBERS_LOGO_DATA_URI, 'PNG', 156, 10, 40, 12.9); } catch(e) {}
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8.5);
-    doc.setTextColor(0, 104, 183);
-    doc.text('AUTHORISED DEALER', 196, 26, { align: 'right' });
-    doc.setTextColor(20, 20, 20);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9.5);
-    drawIconTextRight(WHATSAPP_ICON_DATA_URI, '+91 9052155055', 196, 33, 3.5);
-    drawIconTextRight(GMAIL_ICON_DATA_URI, 'ghousebasha55055@gmail.com', 196, 38, 3.5);
-
-    let y = 48;
-    doc.setDrawColor(20, 20, 20);
-    doc.setLineWidth(0.6);
-    doc.line(14, y, 196, y);
-    y += 9;
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(15);
-    doc.text('QUOTE', 14, y);
-    y += 6;
-    doc.setFontSize(9.5);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Quote No: ' + header.number, 14, y); y += 5;
-    doc.text('Date: ' + (header.date ? new Date(header.date).toLocaleDateString('en-IN') : ''), 14, y); y += 5;
-    if (header.reference){ doc.text('Ref: ' + header.reference, 14, y); y += 5; }
-    y += 4;
-
-    doc.setFont('helvetica', 'bold');
-    doc.text('Bill To', 14, y);
-    if (header.shipTo) doc.text('Ship To', 105, y);
-    y += 5;
-    doc.setFont('helvetica', 'normal');
-    const billLines = doc.splitTextToSize(header.billName + (header.billAddress ? '\n' + header.billAddress : '') + (header.billGSTIN ? '\nGSTIN: ' + header.billGSTIN : ''), 85);
-    doc.text(billLines, 14, y);
-    if (header.shipTo){
-      const shipLines = doc.splitTextToSize(header.shipTo, 85);
-      doc.text(shipLines, 105, y);
-    }
-    y += Math.max(billLines.length, header.shipTo ? doc.splitTextToSize(header.shipTo, 85).length : 0) * 5 + 8;
-
-    doc.autoTable({
-      startY: y,
-      head: [['Description','HSN/SAC','Qty','Unit','Rate','GST%','GST Amt','Amount']],
-      body: items.map((it) => [
-        it.description, it.hsn, it.qty, it.unit,
-        it.rate.toFixed(2), it.gstPct + '%', it.gstAmt.toFixed(2), it.amount.toFixed(2)
-      ]),
-      styles: { fontSize: 8.5, cellPadding: 3, lineColor: [180,180,180], lineWidth: 0.2 },
-      headStyles: { fillColor: BRAND, textColor: [255,255,255], halign: 'center' },
-      columnStyles: {
-        0: { halign: 'left' },
-        1: { halign: 'center' },
-        2: { halign: 'center' },
-        3: { halign: 'center' },
-        4: { halign: 'right' },
-        5: { halign: 'center' },
-        6: { halign: 'right' },
-        7: { halign: 'right' }
-      },
-      margin: { left: 14, right: 14 }
-    });
-
-    let finalY = doc.lastAutoTable.finalY + 8;
-
-    // Outlined totals box, right-aligned, using autoTable for guaranteed alignment
-    // Fixed to end exactly at x=196 (matching the rest of the doc's right margin) so nothing overflows the page
-    doc.autoTable({
-      startY: finalY,
-      body: [
-        ['Sub Total', qFormatCurrency(subTotal)],
-        ['GST Total', qFormatCurrency(gstTotal)],
-        ['Total', qFormatCurrency(grandTotal)]
-      ],
-      theme: 'grid',
-      styles: { fontSize: 10, cellPadding: 3, lineColor: [20,20,20], lineWidth: 0.4 },
-      columnStyles: { 0: { halign: 'left', cellWidth: 32 }, 1: { halign: 'right', cellWidth: 48 } },
-      margin: { left: 116, right: 14 },
-      didParseCell: function(data){
-        if (data.row.index === 2){ data.cell.styles.fontStyle = 'bold'; data.cell.styles.fontSize = 11; }
-      }
-    });
-
-    finalY = doc.lastAutoTable.finalY + 8;
-
-    doc.setFont('helvetica', 'italic');
-    doc.setFontSize(9);
-    const wordsLines = doc.splitTextToSize(qNumberToWords(grandTotal), 180);
-    doc.text(wordsLines, 14, finalY);
-    finalY += wordsLines.length * 4.5 + 8;
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9);
-    doc.text('Bank Details', 14, finalY);
-    finalY += 5;
-    doc.setFont('helvetica', 'normal');
-    doc.text([
-      'Account Name: ' + GHOUSE_BANK.accountName,
-      'A/c Number: ' + GHOUSE_BANK.accountNo,
-      'IFSC Code: ' + GHOUSE_BANK.ifsc,
-      'Bank: ' + GHOUSE_BANK.bankName + ', ' + GHOUSE_BANK.branch
-    ], 14, finalY);
-    finalY += 22;
-
-    doc.setFont('helvetica', 'bold');
-    doc.text('Terms & Conditions', 14, finalY);
-    finalY += 5;
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8.5);
-    GHOUSE_TERMS.forEach((term, idx) => {
-      const lines = doc.splitTextToSize((idx+1) + '. ' + term, 180);
-      doc.text(lines, 14, finalY);
-      finalY += lines.length * 4 + 2;
-    });
-
-    doc.save(`${header.number || 'GHOUSE-Quote'}.pdf`);
-    showQMsg('PDF downloaded.', 'ok');
-  });
-
-  /* ---------- Word (.doc) generation ---------- */
-  document.getElementById('qDownloadWordBtn').addEventListener('click', function(){
-    const header = qLastHeader || qGetHeaderData();
-    const calc = qLastCalc || qRecalculate();
-
-    if (calc.items.length === 0 || !header.billName){
-      showQMsg('Please enter at least the Bill To name and one line item.', 'err');
-      return;
-    }
-
-    const html = qBuildDocHtml(header, calc);
-    const preHtml = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'></head><body>";
-    const postHtml = "</body></html>";
-    const fullHtml = preHtml + html + postHtml;
-    const blob = new Blob(['\ufeff', fullHtml], { type: 'application/msword' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${header.number || 'GHOUSE-Quote'}.doc`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    showQMsg('Word document downloaded.', 'ok');
   });
 
   /* ---------- PWA service worker (optional, safe no-op if file missing) ---------- */
