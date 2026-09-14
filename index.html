@@ -75,7 +75,7 @@
     letter-spacing:.08em;
     text-transform:uppercase;
     font-size:13px;
-    color:var(--ink);
+    color:#4F81BD;
     margin:4px 0 0;
   }
   .phone{
@@ -434,7 +434,7 @@
   }
   .print-header-left .print-tagline{
     font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:12px;
-    text-transform:uppercase;letter-spacing:.04em;margin:4px 0 0;
+    text-transform:uppercase;letter-spacing:.04em;margin:4px 0 0;color:#4F81BD;
   }
   .print-header-left .print-phone{
     font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11.5px;
@@ -753,13 +753,15 @@
         <table class="user-table" id="qItemsTable">
           <thead>
             <tr>
-              <th style="width:30%;">Description</th>
-              <th style="width:12%;">HSN/SAC</th>
-              <th style="width:8%;">Qty</th>
-              <th style="width:9%;">Unit</th>
-              <th style="width:12%;">Rate</th>
-              <th style="width:9%;">GST%</th>
-              <th style="width:14%;">Amount</th>
+              <th style="width:5%;">SNo</th>
+              <th style="width:12%;">Part No</th>
+              <th style="width:10%;">HSN Code</th>
+              <th style="width:23%;">Part Description</th>
+              <th style="width:7%;">Qty</th>
+              <th style="width:8%;">GST%</th>
+              <th style="width:11%;">GST Amount</th>
+              <th style="width:11%;">Rate</th>
+              <th style="width:11%;">Amount</th>
               <th style="width:6%;"></th>
             </tr>
           </thead>
@@ -1316,18 +1318,27 @@
     const tr = document.createElement('tr');
     tr.dataset.rowId = qRowCounter;
     tr.innerHTML = `
-      <td><textarea class="q-desc" rows="1" placeholder="Item description"></textarea></td>
-      <td><input type="text" class="q-hsn" placeholder="HSN/SAC"></td>
+      <td class="q-sno" style="text-align:center;"></td>
+      <td><input type="text" class="q-partno" placeholder="Part No"></td>
+      <td><input type="text" class="q-hsn" placeholder="HSN Code"></td>
+      <td><textarea class="q-desc" rows="1" placeholder="Part description"></textarea></td>
       <td><input type="number" class="q-qty" value="1" step="0.01"></td>
-      <td><input type="text" class="q-unit" placeholder="pcs" value="pcs"></td>
-      <td><input type="number" class="q-rate" value="0" step="0.01"></td>
       <td><input type="number" class="q-gst" value="18" step="0.01"></td>
+      <td class="q-gstamt">₹0.00</td>
+      <td><input type="number" class="q-rate" value="0" step="0.01"></td>
       <td class="q-amount">₹0.00</td>
       <td><button type="button" class="q-remove-btn" title="Remove row">×</button></td>
     `;
     tr.querySelectorAll('input').forEach(inp => inp.addEventListener('input', qRecalculate));
-    tr.querySelector('.q-remove-btn').addEventListener('click', () => { tr.remove(); qRecalculate(); });
+    tr.querySelector('.q-remove-btn').addEventListener('click', () => { tr.remove(); qRenumberRows(); qRecalculate(); });
     qItemsBody.appendChild(tr);
+    qRenumberRows();
+  }
+
+  function qRenumberRows(){
+    Array.from(qItemsBody.querySelectorAll('tr')).forEach((tr, idx) => {
+      tr.querySelector('.q-sno').textContent = idx + 1;
+    });
   }
 
   qAddRowBtn.addEventListener('click', qCreateRow);
@@ -1340,9 +1351,10 @@
       const gstPct = parseFloat(tr.querySelector('.q-gst').value) || 0;
       const amount = qty * rate;
       return {
+        partNo: tr.querySelector('.q-partno').value.trim(),
         description: tr.querySelector('.q-desc').value.trim(),
         hsn: tr.querySelector('.q-hsn').value.trim(),
-        qty, unit: tr.querySelector('.q-unit').value.trim() || 'pcs',
+        qty,
         rate, gstPct,
         gstAmt: amount * gstPct / 100,
         amount
@@ -1400,6 +1412,7 @@
 
     Array.from(qItemsBody.querySelectorAll('tr')).forEach((tr, idx) => {
       tr.querySelector('.q-amount').textContent = qFormatCurrency(items[idx].amount);
+      tr.querySelector('.q-gstamt').textContent = qFormatCurrency(items[idx].gstAmt);
     });
 
     document.getElementById('qSubTotal').textContent = qFormatCurrency(subTotal);
@@ -1431,15 +1444,16 @@
 
   function qBuildDocHtml(header, calc){
     const { items, subTotal, gstTotal, grandTotal } = calc;
-    const itemRows = items.map((it) => `
+    const itemRows = items.map((it, idx) => `
       <tr>
-        <td style="padding:6px;border:1px solid #ccc;">${it.description || '—'}</td>
+        <td style="padding:6px;border:1px solid #ccc;text-align:center;">${idx + 1}</td>
+        <td style="padding:6px;border:1px solid #ccc;">${it.partNo || '—'}</td>
         <td style="padding:6px;border:1px solid #ccc;text-align:center;">${it.hsn || '—'}</td>
+        <td style="padding:6px;border:1px solid #ccc;">${it.description || '—'}</td>
         <td style="padding:6px;border:1px solid #ccc;text-align:center;">${it.qty}</td>
-        <td style="padding:6px;border:1px solid #ccc;text-align:center;">${it.unit}</td>
-        <td style="padding:6px;border:1px solid #ccc;text-align:right;">${qFormatNumber(it.rate)}</td>
         <td style="padding:6px;border:1px solid #ccc;text-align:center;">${it.gstPct}%</td>
         <td style="padding:6px;border:1px solid #ccc;text-align:right;">${qFormatNumber(it.gstAmt)}</td>
+        <td style="padding:6px;border:1px solid #ccc;text-align:right;">${qFormatNumber(it.rate)}</td>
         <td style="padding:6px;border:1px solid #ccc;text-align:right;">${qFormatNumber(it.amount)}</td>
       </tr>`).join('');
 
@@ -1448,7 +1462,7 @@
         <table width="100%" style="border-collapse:collapse;"><tr>
           <td style="vertical-align:top;">
             <div style="font-family:'Agency FB','Arial Narrow',sans-serif;font-weight:700;font-size:32px;letter-spacing:4px;color:#F79646;line-height:1;">GHOUSE</div>
-            <div style="font-weight:800;font-size:13px;letter-spacing:0.5px;margin-top:4px;">BUS AIRCONDITIONING WORKS</div>
+            <div style="font-weight:800;font-size:13px;letter-spacing:0.5px;margin-top:4px;color:#4F81BD;">BUS AIRCONDITIONING WORKS</div>
             <div style="font-size:11.5px;margin-top:6px;display:flex;gap:5px;align-items:flex-start;">
               <img src="${PIN_ICON_DATA_URI}" width="12" height="12" style="margin-top:2px;flex-shrink:0;" alt="">
               <span>Plot No. 169, N.G.O. Colony, Near Industrial Area,<br>Mydukur Road, Proddatur, AP - 516360</span>
@@ -1493,13 +1507,14 @@
         <table width="100%" style="border-collapse:collapse;font-size:11px;margin-bottom:14px;">
           <thead>
             <tr style="background:#F79646;">
-              <th style="padding:6px;border:1px solid #ccc;color:#fff;text-align:left;">Description</th>
-              <th style="padding:6px;border:1px solid #ccc;color:#fff;">HSN/SAC</th>
+              <th style="padding:6px;border:1px solid #ccc;color:#fff;">SNo</th>
+              <th style="padding:6px;border:1px solid #ccc;color:#fff;text-align:left;">Part No</th>
+              <th style="padding:6px;border:1px solid #ccc;color:#fff;">HSN Code</th>
+              <th style="padding:6px;border:1px solid #ccc;color:#fff;text-align:left;">Part Description</th>
               <th style="padding:6px;border:1px solid #ccc;color:#fff;">Qty</th>
-              <th style="padding:6px;border:1px solid #ccc;color:#fff;">Unit</th>
-              <th style="padding:6px;border:1px solid #ccc;color:#fff;">Rate</th>
               <th style="padding:6px;border:1px solid #ccc;color:#fff;">GST%</th>
-              <th style="padding:6px;border:1px solid #ccc;color:#fff;">GST Amt</th>
+              <th style="padding:6px;border:1px solid #ccc;color:#fff;">GST Amount</th>
+              <th style="padding:6px;border:1px solid #ccc;color:#fff;">Rate</th>
               <th style="padding:6px;border:1px solid #ccc;color:#fff;">Amount</th>
             </tr>
           </thead>
@@ -1509,7 +1524,7 @@
         </table>
 
         <table width="100%" style="border-collapse:collapse;margin-bottom:14px;"><tr>
-          <td></td>
+          <td style="vertical-align:bottom;"><p style="font-weight:800;font-size:12.5px;margin:0;">NO WARRANTY FOR SPARE PARTS</p></td>
           <td style="width:230px;">
             <div style="border:1.5px solid #111;padding:10px 14px;font-size:12.5px;">
               <div style="display:flex;justify-content:space-between;"><span>Sub Total</span><span>${qFormatCurrency(subTotal)}</span></div>
