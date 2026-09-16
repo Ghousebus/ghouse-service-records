@@ -407,6 +407,43 @@
   .admin-msg.ok{background:var(--ok-bg);color:var(--ok-ink);border:1px solid var(--ok-ink);}
   .admin-msg.err{background:var(--err-bg);color:var(--err-ink);border:1px solid var(--err-ink);}
 
+  /* Stock tab */
+  .stock-subtab{font-size:13px;padding:10px 8px;}
+  .stock-subpanel{margin-top:16px;}
+  .stock-table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--panel);}
+  .stock-table th{
+    text-align:left;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;
+    letter-spacing:.03em;text-transform:uppercase;color:var(--ink-soft);
+    border-bottom:1.5px solid var(--ink);padding:7px 8px;white-space:nowrap;
+  }
+  .stock-table td{padding:7px 8px;border-bottom:1px dashed var(--rule);white-space:nowrap;}
+  .stock-table td:nth-child(3){white-space:normal;min-width:220px;}
+  .stock-table tfoot td{
+    border-top:2px solid var(--ink);border-bottom:none;font-weight:700;
+    background:var(--cream);
+  }
+  .stock-picker-results{
+    margin-top:8px;border:1.5px solid var(--rule);border-radius:2px;max-height:220px;overflow-y:auto;
+    display:none;
+  }
+  .stock-picker-results.show{display:block;}
+  .stock-picker-item{
+    padding:10px 12px;border-bottom:1px dashed var(--rule);cursor:pointer;font-size:13.5px;
+  }
+  .stock-picker-item:last-child{border-bottom:none;}
+  .stock-picker-item:hover{background:var(--cream);}
+  .stock-picker-item .spi-desc{font-weight:600;}
+  .stock-picker-item .spi-meta{font-size:11.5px;color:var(--ink-soft);margin-top:2px;}
+  .stock-print-table{width:100%;border-collapse:collapse;font-size:10px;}
+  .stock-print-table th, .stock-print-table td{
+    border:1px solid #999;padding:5px 6px;text-align:left;white-space:nowrap;
+  }
+  .stock-print-table th{
+    background:#EFEAE0;font-family:'Barlow Condensed',sans-serif;font-weight:700;
+    text-transform:uppercase;font-size:9.5px;
+  }
+  .stock-print-table tfoot td{font-weight:700;border-top:2px solid #000;}
+
   /* Quotes line-items table */
   #qItemsTable input, #qItemsTable textarea{
     width:100%;border:1.5px solid var(--rule);background:var(--cream);
@@ -423,6 +460,7 @@
   /* Print view */
   #printArea{display:none;}
   #quotePrintArea{display:none;}
+  #stockPrintArea{display:none;}
   .print-frame{border:2px solid #000;padding:18px 22px;}
   .print-header{
     display:flex;justify-content:space-between;align-items:flex-start;
@@ -476,7 +514,7 @@
   }
 
   @media print{
-    body > *:not(#printArea):not(#quotePrintArea){display:none !important;}
+    body > *:not(#printArea):not(#quotePrintArea):not(#stockPrintArea){display:none !important;}
     html, body{height:auto !important;margin:0 !important;padding:0 !important;background:#fff !important;}
     * { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; color-adjust:exact !important; }
     @page{size:landscape;margin:10mm;}
@@ -564,6 +602,7 @@
       <button class="tab-btn" data-tab="search">Search History</button>
       <button class="tab-btn" data-tab="admin" id="adminTabBtn" style="display:none;">Admin</button>
       <button class="tab-btn" data-tab="quotes" id="quotesTabBtn" style="display:none;">Quotes</button>
+      <button class="tab-btn" data-tab="stock" id="stockTabBtn" style="display:none;">Stock</button>
     </div>
 
     <!-- ENTRY TAB -->
@@ -808,7 +847,158 @@
         </div>
       </div>
     </div>
+
+    <!-- STOCK TAB (admin only) -->
+    <div class="tab-panel" id="stockPanel">
+      <div class="tabs" style="margin-top:0;border-bottom:1.5px solid var(--rule);">
+        <button class="tab-btn stock-subtab active" data-stocktab="view">View Stock</button>
+        <button class="tab-btn stock-subtab" data-stocktab="in">Update In</button>
+        <button class="tab-btn stock-subtab" data-stocktab="out">Update Out</button>
+      </div>
+
+      <!-- VIEW STOCK -->
+      <div class="stock-subpanel active" id="stockViewPanel">
+        <div class="search-panel">
+          <h2>Search Stock</h2>
+          <div class="search-row">
+            <div class="field" style="grid-column:1 / -1;">
+              <label for="stockSearchInput">Part Description or Part Number</label>
+              <input type="text" id="stockSearchInput" placeholder="e.g. Blower Motor or 88-50-57-00177-00">
+            </div>
+          </div>
+          <div class="search-actions">
+            <button class="search-btn" id="stockSearchBtn">Search</button>
+            <button class="export-btn" id="stockExportBtn">Export to Excel</button>
+            <button class="print-btn" id="stockPrintBtn">Print</button>
+          </div>
+        </div>
+
+        <div id="stockStatusLine" class="status-line" style="display:none;"></div>
+        <div style="overflow-x:auto;margin-top:14px;">
+          <table class="user-table stock-table" id="stockResultsTable">
+            <thead>
+              <tr>
+                <th>SN</th><th>Part No</th><th>Description</th><th>Brand</th><th>Category</th>
+                <th>Unit Price</th><th>Total Stock</th><th>Total Value</th><th>Used</th><th>Balance</th><th>Balance Value</th>
+              </tr>
+            </thead>
+            <tbody id="stockResultsBody"></tbody>
+            <tfoot id="stockTotalsFoot"></tfoot>
+          </table>
+        </div>
+      </div>
+
+      <!-- UPDATE IN -->
+      <div class="stock-subpanel" id="stockInPanel" style="display:none;">
+        <div class="admin-panel">
+          <h2>Update Stock — Existing Part</h2>
+          <div class="field">
+            <label for="stockInSearchInput">Search Part</label>
+            <input type="text" id="stockInSearchInput" placeholder="Type part description or part number...">
+          </div>
+          <div id="stockInSearchResults" class="stock-picker-results"></div>
+
+          <div id="stockInSelected" style="display:none;margin-top:16px;">
+            <div class="review-list">
+              <div class="review-item"><dt>Selected Part</dt><dd id="stockInSelectedName">—</dd></div>
+              <div class="review-item"><dt>Current Balance</dt><dd id="stockInSelectedBalance">—</dd></div>
+              <div class="review-item"><dt>Current Avg Price</dt><dd id="stockInSelectedPrice">—</dd></div>
+            </div>
+            <div class="row2" style="margin-top:16px;">
+              <div class="field">
+                <label for="stockInQty">Qty Added</label>
+                <input type="number" id="stockInQty" min="0.01" step="0.01">
+              </div>
+              <div class="field">
+                <label for="stockInPrice">Price Paid (per unit)</label>
+                <input type="number" id="stockInPrice" min="0" step="0.01">
+              </div>
+            </div>
+            <div class="search-actions">
+              <button class="search-btn" id="stockInSubmitBtn" style="flex:1;">Update Stock</button>
+              <button type="button" class="btn-edit" id="stockInClearBtn" style="flex:1;">Clear</button>
+            </div>
+          </div>
+          <div class="admin-msg" id="stockInMsg"></div>
+        </div>
+
+        <div class="admin-panel" style="margin-top:16px;">
+          <button type="button" class="print-btn" id="stockAddNewToggleBtn" style="width:100%;">+ Add New Line Item</button>
+          <div id="stockAddNewForm" style="display:none;margin-top:18px;">
+            <div class="row2">
+              <div class="field">
+                <label for="stockNewPartNo">Part No (optional)</label>
+                <input type="text" id="stockNewPartNo">
+              </div>
+              <div class="field">
+                <label for="stockNewDescription">Part Description <span class="req">*</span></label>
+                <input type="text" id="stockNewDescription">
+              </div>
+            </div>
+            <div class="row2">
+              <div class="field">
+                <label for="stockNewBrand">Brand</label>
+                <input type="text" id="stockNewBrand">
+              </div>
+              <div class="field">
+                <label for="stockNewCategory">Category</label>
+                <input type="text" id="stockNewCategory">
+              </div>
+            </div>
+            <div class="row2">
+              <div class="field">
+                <label for="stockNewPrice">Unit Price <span class="req">*</span></label>
+                <input type="number" id="stockNewPrice" min="0" step="0.01">
+              </div>
+              <div class="field">
+                <label for="stockNewQty">Qty <span class="req">*</span></label>
+                <input type="number" id="stockNewQty" min="0.01" step="0.01">
+              </div>
+            </div>
+            <button class="search-btn" id="stockNewSubmitBtn">Add Part to Stock</button>
+          </div>
+          <div class="admin-msg" id="stockNewMsg"></div>
+        </div>
+      </div>
+
+      <!-- UPDATE OUT -->
+      <div class="stock-subpanel" id="stockOutPanel" style="display:none;">
+        <div class="admin-panel">
+          <h2>Update Stock — Part Used</h2>
+          <div class="field">
+            <label for="stockOutSearchInput">Search Part</label>
+            <input type="text" id="stockOutSearchInput" placeholder="Type part description or part number...">
+          </div>
+          <div id="stockOutSearchResults" class="stock-picker-results"></div>
+
+          <div id="stockOutSelected" style="display:none;margin-top:16px;">
+            <div class="review-list">
+              <div class="review-item"><dt>Selected Part</dt><dd id="stockOutSelectedName">—</dd></div>
+              <div class="review-item"><dt>Current Balance</dt><dd id="stockOutSelectedBalance">—</dd></div>
+            </div>
+            <div class="row2" style="margin-top:16px;">
+              <div class="field">
+                <label for="stockOutQty">Qty Used</label>
+                <input type="number" id="stockOutQty" min="0.01" step="0.01">
+              </div>
+              <div class="field">
+                <label for="stockOutVehicle">Vehicle Number (optional)</label>
+                <input type="text" id="stockOutVehicle" placeholder="e.g. AP21 TA 1234">
+              </div>
+            </div>
+            <div class="search-actions">
+              <button class="search-btn" id="stockOutSubmitBtn" style="flex:1;">Update Stock</button>
+              <button type="button" class="btn-edit" id="stockOutClearBtn" style="flex:1;">Clear</button>
+            </div>
+          </div>
+          <div class="admin-msg" id="stockOutMsg"></div>
+        </div>
+      </div>
+    </div>
   </div>
+
+  <!-- Print-only view for Stock (kept separate from service-records and quote print templates) -->
+  <div id="stockPrintArea" class="print-target"></div>
 
   <p class="footer">
     Plot No. 169, N.G.O. Colony, Near Industrial Area, Mydukur Road, Proddatur – 516360, Y.S.R. Kadapa Dist., A.P.<br>
@@ -906,6 +1096,7 @@
   const adminTabBtn = document.getElementById('adminTabBtn');
 
   let currentRole = 'user';
+  let stockLoadedOnce = false;
 
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -938,6 +1129,7 @@
       sessionUsername.textContent = user.displayName || user.email.replace('@ghouse.local', '');
       adminTabBtn.style.display = currentRole === 'admin' ? '' : 'none';
       quotesTabBtn.style.display = currentRole === 'admin' ? '' : 'none';
+      stockTabBtn.style.display = currentRole === 'admin' ? '' : 'none';
 
       loginScreen.style.display = 'none';
       appShell.style.display = 'block';
@@ -952,15 +1144,17 @@
   });
 
   /* ---------- Tab switching ---------- */
-  const tabBtns = document.querySelectorAll('.tab-btn');
+  const tabBtns = document.querySelectorAll('.tabs > .tab-btn'); // top-level tabs only, excludes stock sub-tabs
   const quotesTabBtn = document.getElementById('quotesTabBtn');
-  const tabPanels = { entry: document.getElementById('entryPanel'), search: document.getElementById('searchPanel'), admin: document.getElementById('adminPanel'), quotes: document.getElementById('quotesPanel') };
+  const stockTabBtn = document.getElementById('stockTabBtn');
+  const tabPanels = { entry: document.getElementById('entryPanel'), search: document.getElementById('searchPanel'), admin: document.getElementById('adminPanel'), quotes: document.getElementById('quotesPanel'), stock: document.getElementById('stockPanel') };
 
   function activateTab(name){
-    if ((name === 'admin' || name === 'quotes') && currentRole !== 'admin') name = 'entry';
+    if ((name === 'admin' || name === 'quotes' || name === 'stock') && currentRole !== 'admin') name = 'entry';
     tabBtns.forEach(b => b.classList.toggle('active', b.dataset.tab === name));
     Object.keys(tabPanels).forEach(k => tabPanels[k].classList.toggle('active', k === name));
     history.replaceState(null, '', '#' + name);
+    if (name === 'stock' && !stockLoadedOnce){ stockLoadedOnce = true; runStockSearch(); }
   }
   tabBtns.forEach(btn => btn.addEventListener('click', () => activateTab(btn.dataset.tab)));
   activateTab(location.hash === '#search' ? 'search' : (location.hash === '#admin' ? 'admin' : (location.hash === '#quotes' ? 'quotes' : 'entry')));
@@ -1620,6 +1814,368 @@
       document.getElementById('dynamicPageStyle').textContent = '';
       window.removeEventListener('afterprint', resetPrint);
     });
+  });
+
+  /* ---------- Stock: sub-tab switching (View / Update In / Update Out) ---------- */
+  const stockSubtabBtns = document.querySelectorAll('.stock-subtab');
+  const stockSubpanels = {
+    view: document.getElementById('stockViewPanel'),
+    in: document.getElementById('stockInPanel'),
+    out: document.getElementById('stockOutPanel')
+  };
+  stockSubtabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      stockSubtabBtns.forEach(b => b.classList.toggle('active', b === btn));
+      Object.keys(stockSubpanels).forEach(k => {
+        stockSubpanels[k].style.display = (k === btn.dataset.stocktab) ? 'block' : 'none';
+      });
+    });
+  });
+
+  /* ---------- Stock: shared helpers ---------- */
+  function stockFormatCurrency(n){
+    return 'Rs. ' + (n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function stockFormatNumber(n){
+    return (n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  let currentStockItems = [];
+  let currentStockTotals = null;
+
+  /* ---------- Stock: View / Search ---------- */
+  const stockSearchInput = document.getElementById('stockSearchInput');
+  const stockSearchBtn = document.getElementById('stockSearchBtn');
+  const stockExportBtn = document.getElementById('stockExportBtn');
+  const stockPrintBtn = document.getElementById('stockPrintBtn');
+  const stockStatusLine = document.getElementById('stockStatusLine');
+  const stockResultsBody = document.getElementById('stockResultsBody');
+  const stockTotalsFoot = document.getElementById('stockTotalsFoot');
+
+  function renderStockTotalsRow(totals){
+    stockTotalsFoot.innerHTML = `
+      <tr>
+        <td colspan="6" style="text-align:right;">TOTAL</td>
+        <td>${stockFormatNumber(totals.totalStock)}</td>
+        <td>${stockFormatCurrency(totals.totalStockPrice)}</td>
+        <td>${stockFormatNumber(totals.usedStock)}</td>
+        <td>${stockFormatNumber(totals.balanceStock)}</td>
+        <td>${stockFormatCurrency(totals.balanceStockPrice)}</td>
+      </tr>`;
+  }
+
+  function renderStockResults(items){
+    stockResultsBody.innerHTML = '';
+    if (items.length === 0){
+      stockResultsBody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:20px;color:var(--ink-soft);">No parts found.</td></tr>';
+      return;
+    }
+    stockResultsBody.innerHTML = items.map(it => `
+      <tr>
+        <td>${it['SN'] || ''}</td>
+        <td>${it['Part No'] || '—'}</td>
+        <td>${it['Description'] || ''}</td>
+        <td>${it['Brand'] || '—'}</td>
+        <td>${it['Category'] || '—'}</td>
+        <td>${stockFormatCurrency(it['Unit Price'])}</td>
+        <td>${stockFormatNumber(it['Total Stock'])}</td>
+        <td>${stockFormatCurrency(it['Total Stock Price'])}</td>
+        <td>${stockFormatNumber(it['Used Stock'])}</td>
+        <td>${stockFormatNumber(it['Balance Stock'])}</td>
+        <td>${stockFormatCurrency(it['Balance Stock Price'])}</td>
+      </tr>`).join('');
+  }
+
+  async function runStockSearch(){
+    const q = stockSearchInput.value.trim();
+    stockSearchBtn.disabled = true;
+    stockSearchBtn.textContent = 'Searching...';
+    stockStatusLine.style.display = 'block';
+    stockStatusLine.textContent = 'Loading stock...';
+    stockResultsBody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:20px;">Loading…</td></tr>';
+
+    try {
+      const stockSearch = functions.httpsCallable('stockSearch');
+      const result = await stockSearch({ q });
+      const data = result.data;
+      if (data.success){
+        currentStockItems = data.items;
+        currentStockTotals = data.totals;
+        stockStatusLine.innerHTML = `<span class="count">${data.items.length}</span> part(s) found`;
+        renderStockResults(data.items);
+        renderStockTotalsRow(data.totals);
+      } else {
+        currentStockItems = [];
+        stockStatusLine.textContent = 'Search failed';
+        stockResultsBody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:20px;">Something went wrong.</td></tr>';
+      }
+    } catch (err) {
+      currentStockItems = [];
+      stockStatusLine.textContent = 'Network error';
+      stockResultsBody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:20px;">Network error — please try again.</td></tr>';
+    } finally {
+      stockSearchBtn.disabled = false;
+      stockSearchBtn.textContent = 'Search';
+    }
+  }
+  stockSearchBtn.addEventListener('click', runStockSearch);
+  stockSearchInput.addEventListener('keydown', e => { if (e.key === 'Enter') runStockSearch(); });
+
+  stockExportBtn.addEventListener('click', function(){
+    if (currentStockItems.length === 0){ alert('No stock data to export. Run a search first.'); return; }
+    const headers = ['SN','Part No','Description','Brand','Category','Unit Price','Total Stock','Total Stock Price','Used Stock','Balance Stock','Balance Stock Price'];
+    const rows = currentStockItems.map(it => headers.map(h => it[h] !== undefined ? it[h] : ''));
+    if (currentStockTotals){
+      rows.push(['','','TOTAL','','','',currentStockTotals.totalStock,currentStockTotals.totalStockPrice,currentStockTotals.usedStock,currentStockTotals.balanceStock,currentStockTotals.balanceStockPrice]);
+    }
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+    ws['!cols'] = [{wch:5},{wch:14},{wch:40},{wch:12},{wch:12},{wch:12},{wch:12},{wch:14},{wch:10},{wch:10},{wch:14}];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Stock');
+    const stamp = new Date().toISOString().slice(0,10);
+    XLSX.writeFile(wb, `GHOUSE_Stock_${stamp}.xlsx`);
+  });
+
+  stockPrintBtn.addEventListener('click', function(){
+    if (currentStockItems.length === 0){ alert('No stock data to print. Run a search first.'); return; }
+    const stockPrintArea = document.getElementById('stockPrintArea');
+    const rows = currentStockItems.map(it => `
+      <tr>
+        <td>${it['SN'] || ''}</td>
+        <td>${it['Part No'] || ''}</td>
+        <td>${it['Description'] || ''}</td>
+        <td>${it['Brand'] || ''}</td>
+        <td>${it['Category'] || ''}</td>
+        <td>${stockFormatCurrency(it['Unit Price'])}</td>
+        <td>${stockFormatNumber(it['Total Stock'])}</td>
+        <td>${stockFormatCurrency(it['Total Stock Price'])}</td>
+        <td>${stockFormatNumber(it['Used Stock'])}</td>
+        <td>${stockFormatNumber(it['Balance Stock'])}</td>
+        <td>${stockFormatCurrency(it['Balance Stock Price'])}</td>
+      </tr>`).join('');
+    const totalsRow = currentStockTotals ? `
+      <tr>
+        <td colspan="6" style="text-align:right;">TOTAL</td>
+        <td>${stockFormatNumber(currentStockTotals.totalStock)}</td>
+        <td>${stockFormatCurrency(currentStockTotals.totalStockPrice)}</td>
+        <td>${stockFormatNumber(currentStockTotals.usedStock)}</td>
+        <td>${stockFormatNumber(currentStockTotals.balanceStock)}</td>
+        <td>${stockFormatCurrency(currentStockTotals.balanceStockPrice)}</td>
+      </tr>` : '';
+
+    stockPrintArea.innerHTML = `
+      <div style="border:2px solid #000;padding:16px 20px;font-family:Arial,sans-serif;">
+        <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:10px;">
+          <div style="font-weight:800;font-size:18px;color:#F79646;">GHOUSE — Stock Report</div>
+          <div style="font-size:11px;">Printed: ${new Date().toLocaleDateString('en-IN')} · ${currentStockItems.length} part(s)</div>
+        </div>
+        <table class="stock-print-table">
+          <thead><tr>
+            <th>SN</th><th>Part No</th><th>Description</th><th>Brand</th><th>Category</th>
+            <th>Unit Price</th><th>Total Stock</th><th>Total Value</th><th>Used</th><th>Balance</th><th>Balance Value</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+          <tfoot>${totalsRow}</tfoot>
+        </table>
+      </div>`;
+
+    document.getElementById('dynamicPageStyle').textContent = '@page{size:landscape;margin:10mm;}';
+    stockPrintArea.style.display = 'block';
+    window.print();
+    window.addEventListener('afterprint', function resetPrint(){
+      stockPrintArea.style.display = 'none';
+      document.getElementById('dynamicPageStyle').textContent = '';
+      window.removeEventListener('afterprint', resetPrint);
+    });
+  });
+
+  /* ---------- Stock: shared part-picker (used by both Update In and Update Out) ---------- */
+  function setupStockPicker(searchInputEl, resultsEl, onSelect){
+    let debounceTimer = null;
+    searchInputEl.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      const q = searchInputEl.value.trim();
+      if (q.length < 2){ resultsEl.classList.remove('show'); resultsEl.innerHTML=''; return; }
+      debounceTimer = setTimeout(async () => {
+        try {
+          const stockSearch = functions.httpsCallable('stockSearch');
+          const result = await stockSearch({ q });
+          const items = (result.data && result.data.success) ? result.data.items.slice(0, 8) : [];
+          if (items.length === 0){
+            resultsEl.innerHTML = '<div class="stock-picker-item" style="color:var(--ink-soft);">No matches.</div>';
+          } else {
+            resultsEl.innerHTML = items.map(it => `
+              <div class="stock-picker-item" data-row="${it['_row']}">
+                <div class="spi-desc">${it['Description']}</div>
+                <div class="spi-meta">Balance: ${stockFormatNumber(it['Balance Stock'])} · Avg Price: ${stockFormatCurrency(it['Unit Price'])}</div>
+              </div>`).join('');
+            resultsEl.querySelectorAll('.stock-picker-item').forEach((el, idx) => {
+              el.addEventListener('click', () => {
+                onSelect(items[idx]);
+                resultsEl.classList.remove('show');
+                resultsEl.innerHTML = '';
+                searchInputEl.value = '';
+              });
+            });
+          }
+          resultsEl.classList.add('show');
+        } catch(err){
+          resultsEl.innerHTML = '<div class="stock-picker-item">Search error.</div>';
+          resultsEl.classList.add('show');
+        }
+      }, 350);
+    });
+  }
+
+  /* ---------- Stock: Update In (existing part) ---------- */
+  let stockInSelectedItem = null;
+  setupStockPicker(
+    document.getElementById('stockInSearchInput'),
+    document.getElementById('stockInSearchResults'),
+    (item) => {
+      stockInSelectedItem = item;
+      document.getElementById('stockInSelectedName').textContent = item['Description'];
+      document.getElementById('stockInSelectedBalance').textContent = stockFormatNumber(item['Balance Stock']);
+      document.getElementById('stockInSelectedPrice').textContent = stockFormatCurrency(item['Unit Price']);
+      document.getElementById('stockInSelected').style.display = 'block';
+      document.getElementById('stockInMsg').className = 'admin-msg';
+    }
+  );
+
+  document.getElementById('stockInClearBtn').addEventListener('click', () => {
+    stockInSelectedItem = null;
+    document.getElementById('stockInSelected').style.display = 'none';
+    document.getElementById('stockInQty').value = '';
+    document.getElementById('stockInPrice').value = '';
+  });
+
+  document.getElementById('stockInSubmitBtn').addEventListener('click', async () => {
+    const msgEl = document.getElementById('stockInMsg');
+    if (!stockInSelectedItem){ msgEl.textContent='Select a part first.'; msgEl.className='admin-msg show err'; return; }
+    const qtyAdded = parseFloat(document.getElementById('stockInQty').value) || 0;
+    const pricePaid = parseFloat(document.getElementById('stockInPrice').value) || 0;
+    if (qtyAdded <= 0 || pricePaid <= 0){
+      msgEl.textContent = 'Enter a valid quantity and price.'; msgEl.className = 'admin-msg show err'; return;
+    }
+    const btn = document.getElementById('stockInSubmitBtn');
+    btn.disabled = true; btn.textContent = 'Updating...';
+    try {
+      const stockInExisting = functions.httpsCallable('stockInExisting');
+      const result = await stockInExisting({ row: stockInSelectedItem['_row'], qtyAdded, pricePaid });
+      if (result.data.success){
+        msgEl.textContent = `Updated. New avg price: ${stockFormatCurrency(result.data.newAvgPrice)}, new balance: ${stockFormatNumber(result.data.newBalanceStock)}`;
+        msgEl.className = 'admin-msg show ok';
+        document.getElementById('stockInSelected').style.display = 'none';
+        document.getElementById('stockInQty').value = '';
+        document.getElementById('stockInPrice').value = '';
+        stockInSelectedItem = null;
+      } else {
+        msgEl.textContent = result.data.message || 'Could not update stock.';
+        msgEl.className = 'admin-msg show err';
+      }
+    } catch(err){
+      msgEl.textContent = 'Network error — please try again.';
+      msgEl.className = 'admin-msg show err';
+    } finally {
+      btn.disabled = false; btn.textContent = 'Update Stock';
+    }
+  });
+
+  /* ---------- Stock: Add New Part ---------- */
+  document.getElementById('stockAddNewToggleBtn').addEventListener('click', () => {
+    const form = document.getElementById('stockAddNewForm');
+    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+  });
+
+  document.getElementById('stockNewSubmitBtn').addEventListener('click', async () => {
+    const msgEl = document.getElementById('stockNewMsg');
+    const description = document.getElementById('stockNewDescription').value.trim();
+    const unitPrice = parseFloat(document.getElementById('stockNewPrice').value) || 0;
+    const qty = parseFloat(document.getElementById('stockNewQty').value) || 0;
+
+    if (!description || unitPrice <= 0 || qty <= 0){
+      msgEl.textContent = 'Part Description, Unit Price and Qty are required.';
+      msgEl.className = 'admin-msg show err';
+      return;
+    }
+
+    const btn = document.getElementById('stockNewSubmitBtn');
+    btn.disabled = true; btn.textContent = 'Adding...';
+    try {
+      const stockInNew = functions.httpsCallable('stockInNew');
+      const result = await stockInNew({
+        partNo: document.getElementById('stockNewPartNo').value.trim(),
+        description, unitPrice, qty,
+        brand: document.getElementById('stockNewBrand').value.trim(),
+        category: document.getElementById('stockNewCategory').value.trim()
+      });
+      if (result.data.success){
+        msgEl.textContent = 'New part added to stock.';
+        msgEl.className = 'admin-msg show ok';
+        ['stockNewPartNo','stockNewDescription','stockNewBrand','stockNewCategory','stockNewPrice','stockNewQty'].forEach(id => document.getElementById(id).value = '');
+      } else {
+        msgEl.textContent = result.data.message || 'Could not add part.';
+        msgEl.className = 'admin-msg show err';
+      }
+    } catch(err){
+      msgEl.textContent = 'Network error — please try again.';
+      msgEl.className = 'admin-msg show err';
+    } finally {
+      btn.disabled = false; btn.textContent = 'Add Part to Stock';
+    }
+  });
+
+  /* ---------- Stock: Update Out (part used) ---------- */
+  let stockOutSelectedItem = null;
+  setupStockPicker(
+    document.getElementById('stockOutSearchInput'),
+    document.getElementById('stockOutSearchResults'),
+    (item) => {
+      stockOutSelectedItem = item;
+      document.getElementById('stockOutSelectedName').textContent = item['Description'];
+      document.getElementById('stockOutSelectedBalance').textContent = stockFormatNumber(item['Balance Stock']);
+      document.getElementById('stockOutSelected').style.display = 'block';
+      document.getElementById('stockOutMsg').className = 'admin-msg';
+    }
+  );
+
+  document.getElementById('stockOutClearBtn').addEventListener('click', () => {
+    stockOutSelectedItem = null;
+    document.getElementById('stockOutSelected').style.display = 'none';
+    document.getElementById('stockOutQty').value = '';
+    document.getElementById('stockOutVehicle').value = '';
+  });
+
+  document.getElementById('stockOutSubmitBtn').addEventListener('click', async () => {
+    const msgEl = document.getElementById('stockOutMsg');
+    if (!stockOutSelectedItem){ msgEl.textContent='Select a part first.'; msgEl.className='admin-msg show err'; return; }
+    const qtyUsed = parseFloat(document.getElementById('stockOutQty').value) || 0;
+    const vehicleNumber = document.getElementById('stockOutVehicle').value.trim();
+    if (qtyUsed <= 0){
+      msgEl.textContent = 'Enter a valid quantity.'; msgEl.className = 'admin-msg show err'; return;
+    }
+    const btn = document.getElementById('stockOutSubmitBtn');
+    btn.disabled = true; btn.textContent = 'Updating...';
+    try {
+      const stockOut = functions.httpsCallable('stockOut');
+      const result = await stockOut({ row: stockOutSelectedItem['_row'], qtyUsed, vehicleNumber });
+      if (result.data.success){
+        msgEl.textContent = `Updated. New balance: ${stockFormatNumber(result.data.newBalanceStock)}`;
+        msgEl.className = 'admin-msg show ok';
+        document.getElementById('stockOutSelected').style.display = 'none';
+        document.getElementById('stockOutQty').value = '';
+        document.getElementById('stockOutVehicle').value = '';
+        stockOutSelectedItem = null;
+      } else {
+        msgEl.textContent = result.data.message || 'Could not update stock.';
+        msgEl.className = 'admin-msg show err';
+      }
+    } catch(err){
+      msgEl.textContent = 'Network error — please try again.';
+      msgEl.className = 'admin-msg show err';
+    } finally {
+      btn.disabled = false; btn.textContent = 'Update Stock';
+    }
   });
 
   /* ---------- PWA service worker (optional, safe no-op if file missing) ---------- */
