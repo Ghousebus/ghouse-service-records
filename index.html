@@ -52,7 +52,7 @@
     padding:22px 20px 18px;
   }
   .header-inner{
-    max-width:880px;
+    max-width:1400px;
     margin:0 auto;
     display:flex;
     justify-content:space-between;
@@ -109,7 +109,7 @@
     text-transform:uppercase;
   }
 
-  .wrap{max-width:880px;margin:0 auto;padding:0 20px;}
+  .wrap{max-width:1400px;margin:0 auto;padding:0 24px;}
 
   /* Tabs */
   .tabs{
@@ -410,14 +410,24 @@
   /* Stock tab */
   .stock-subtab{font-size:13px;padding:10px 8px;}
   .stock-subpanel{margin-top:16px;}
-  .stock-table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--panel);}
+  .stock-table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:12.5px;background:var(--panel);}
   .stock-table th{
     text-align:left;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;
     letter-spacing:.03em;text-transform:uppercase;color:var(--ink-soft);
-    border-bottom:1.5px solid var(--ink);padding:7px 8px;white-space:nowrap;
+    border-bottom:1.5px solid var(--ink);padding:7px 8px;
   }
-  .stock-table td{padding:7px 8px;border-bottom:1px dashed var(--rule);white-space:nowrap;}
-  .stock-table td:nth-child(3){white-space:normal;min-width:220px;}
+  .stock-table td{padding:7px 8px;border-bottom:1px dashed var(--rule);overflow-wrap:break-word;}
+  .stock-table th:nth-child(1), .stock-table td:nth-child(1){width:4%;}
+  .stock-table th:nth-child(2), .stock-table td:nth-child(2){width:8%;}
+  .stock-table th:nth-child(3), .stock-table td:nth-child(3){width:29%;white-space:normal;}
+  .stock-table th:nth-child(4), .stock-table td:nth-child(4){width:7%;}
+  .stock-table th:nth-child(5), .stock-table td:nth-child(5){width:7%;}
+  .stock-table th:nth-child(6), .stock-table td:nth-child(6){width:9%;text-align:right;}
+  .stock-table th:nth-child(7), .stock-table td:nth-child(7){width:6%;text-align:right;}
+  .stock-table th:nth-child(8), .stock-table td:nth-child(8){width:9%;text-align:right;}
+  .stock-table th:nth-child(9), .stock-table td:nth-child(9){width:6%;text-align:right;}
+  .stock-table th:nth-child(10), .stock-table td:nth-child(10){width:6%;text-align:right;}
+  .stock-table th:nth-child(11), .stock-table td:nth-child(11){width:9%;text-align:right;}
   .stock-table tfoot td{
     border-top:2px solid var(--ink);border-bottom:none;font-weight:700;
     background:var(--cream);
@@ -879,7 +889,7 @@
             <thead>
               <tr>
                 <th>SN</th><th>Part No</th><th>Description</th><th>Brand</th><th>Category</th>
-                <th>Unit Price</th><th>Total Stock</th><th>Total Value</th><th>Used</th><th>Balance</th><th>Balance Value</th>
+                <th>Unit Price</th><th>Total Stock</th><th>Total Stock Price</th><th>Used Stock</th><th>Balance Stock</th><th>Balance Stock Price</th>
               </tr>
             </thead>
             <tbody id="stockResultsBody"></tbody>
@@ -1834,10 +1844,10 @@
 
   /* ---------- Stock: shared helpers ---------- */
   function stockFormatCurrency(n){
-    return 'Rs. ' + (n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return (n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
   function stockFormatNumber(n){
-    return (n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return Math.round(n || 0).toLocaleString('en-IN');
   }
 
   let currentStockItems = [];
@@ -1972,7 +1982,7 @@
         <table class="stock-print-table">
           <thead><tr>
             <th>SN</th><th>Part No</th><th>Description</th><th>Brand</th><th>Category</th>
-            <th>Unit Price</th><th>Total Stock</th><th>Total Value</th><th>Used</th><th>Balance</th><th>Balance Value</th>
+            <th>Unit Price</th><th>Total Stock</th><th>Total Stock Price</th><th>Used Stock</th><th>Balance Stock</th><th>Balance Stock Price</th>
           </tr></thead>
           <tbody>${rows}</tbody>
           <tfoot>${totalsRow}</tfoot>
