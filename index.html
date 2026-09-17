@@ -412,23 +412,23 @@
   .stock-subpanel{margin-top:16px;}
   .stock-table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:12.5px;background:var(--panel);border:1px solid var(--ink);}
   .stock-table th{
-    text-align:left;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;
+    text-align:center;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;
     letter-spacing:.03em;text-transform:uppercase;color:#fff;background:var(--terracotta);
     border:1px solid var(--ink);padding:11px 10px;
   }
   .stock-table td{padding:11px 10px;border:1px solid var(--rule);overflow-wrap:break-word;color:#111;}
-  .stock-table th:nth-child(1), .stock-table td:nth-child(1){width:4%;}
-  .stock-table th:nth-child(2), .stock-table td:nth-child(2){width:8%;}
-  .stock-table th:nth-child(3), .stock-table td:nth-child(3){width:29%;white-space:normal;}
-  .stock-table th:nth-child(4), .stock-table td:nth-child(4){width:7%;}
-  .stock-table th:nth-child(5), .stock-table td:nth-child(5){width:7%;}
-  .stock-table th:nth-child(6), .stock-table td:nth-child(6){width:9%;text-align:right;}
-  .stock-table th:nth-child(7), .stock-table td:nth-child(7){width:6%;text-align:right;}
-  .stock-table th:nth-child(8), .stock-table td:nth-child(8){width:9%;text-align:right;}
-  .stock-table th:nth-child(9), .stock-table td:nth-child(9){width:6%;text-align:right;}
-  .stock-table th:nth-child(10), .stock-table td:nth-child(10){width:6%;text-align:right;}
-  .stock-table th:nth-child(11), .stock-table td:nth-child(11){width:9%;text-align:right;}
-  .stock-table tfoot td{
+  .stock-table td:nth-child(1){width:4%;}
+  .stock-table td:nth-child(2){width:8%;}
+  .stock-table td:nth-child(3){width:29%;white-space:normal;}
+  .stock-table td:nth-child(4){width:7%;}
+  .stock-table td:nth-child(5){width:7%;}
+  .stock-table td:nth-child(6){width:9%;text-align:right;}
+  .stock-table td:nth-child(7){width:6%;text-align:right;}
+  .stock-table td:nth-child(8){width:9%;text-align:right;}
+  .stock-table td:nth-child(9){width:6%;text-align:right;}
+  .stock-table td:nth-child(10){width:6%;text-align:right;}
+  .stock-table td:nth-child(11){width:9%;text-align:right;}
+  .stock-table tr.stock-total-row td{
     border:1px solid var(--ink);font-weight:700;color:#111;
     background:var(--cream);
   }
@@ -446,13 +446,21 @@
   .stock-picker-item .spi-meta{font-size:11.5px;color:var(--ink-soft);margin-top:2px;}
   .stock-print-table{width:100%;border-collapse:collapse;font-size:10px;}
   .stock-print-table th, .stock-print-table td{
-    border:1px solid #999;padding:8px 7px;text-align:left;color:#111;
+    border:1px solid #999;padding:8px 7px;color:#111;
   }
   .stock-print-table th{
     background:#F79646;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;
-    text-transform:uppercase;font-size:9.5px;
+    text-transform:uppercase;font-size:9.5px;text-align:center;
   }
-  .stock-print-table tfoot td{font-weight:700;background:#FBF8F2;}
+  .stock-print-table td{text-align:left;}
+  .stock-print-table td:nth-child(6),
+  .stock-print-table td:nth-child(7),
+  .stock-print-table td:nth-child(8),
+  .stock-print-table td:nth-child(9),
+  .stock-print-table td:nth-child(10),
+  .stock-print-table td:nth-child(11){text-align:right;}
+  .stock-print-table tr.stock-total-row td{font-weight:700;background:#FBF8F2;}
+  .stock-print-table tr.stock-total-row{break-inside:avoid;page-break-inside:avoid;}
 
   /* Quotes line-items table */
   #qItemsTable input, #qItemsTable textarea{
@@ -893,7 +901,6 @@
               </tr>
             </thead>
             <tbody id="stockResultsBody"></tbody>
-            <tfoot id="stockTotalsFoot"></tfoot>
           </table>
         </div>
       </div>
@@ -1869,27 +1876,25 @@
   const stockPrintBtn = document.getElementById('stockPrintBtn');
   const stockStatusLine = document.getElementById('stockStatusLine');
   const stockResultsBody = document.getElementById('stockResultsBody');
-  const stockTotalsFoot = document.getElementById('stockTotalsFoot');
 
-  function renderStockTotalsRow(totals){
-    stockTotalsFoot.innerHTML = `
-      <tr>
+  function stockTotalsRowHtml(totals){
+    return `
+      <tr class="stock-total-row">
         <td colspan="6" style="text-align:right;">TOTAL</td>
-        <td>${stockFormatNumber(totals.totalStock)}</td>
-        <td>${stockFormatCurrency(totals.totalStockPrice)}</td>
-        <td>${stockFormatNumber(totals.usedStock)}</td>
-        <td>${stockFormatNumber(totals.balanceStock)}</td>
-        <td>${stockFormatCurrency(totals.balanceStockPrice)}</td>
+        <td style="text-align:right;">${stockFormatNumber(totals.totalStock)}</td>
+        <td style="text-align:right;">${stockFormatCurrency(totals.totalStockPrice)}</td>
+        <td style="text-align:right;">${stockFormatNumber(totals.usedStock)}</td>
+        <td style="text-align:right;">${stockFormatNumber(totals.balanceStock)}</td>
+        <td style="text-align:right;">${stockFormatCurrency(totals.balanceStockPrice)}</td>
       </tr>`;
   }
 
-  function renderStockResults(items){
-    stockResultsBody.innerHTML = '';
+  function renderStockResults(items, totals){
     if (items.length === 0){
       stockResultsBody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:20px;color:var(--ink-soft);">No parts found.</td></tr>';
       return;
     }
-    stockResultsBody.innerHTML = items.map(it => `
+    const itemRows = items.map(it => `
       <tr>
         <td>${it['SN'] || ''}</td>
         <td>${it['Part No'] || '—'}</td>
@@ -1903,6 +1908,10 @@
         <td>${stockFormatNumber(it['Balance Stock'])}</td>
         <td>${stockFormatCurrency(it['Balance Stock Price'])}</td>
       </tr>`).join('');
+    // Totals row lives as the LAST row of tbody (not a semantic <tfoot>) so it
+    // appears once, after the true last row — a <tfoot> gets reprinted on every
+    // page when a table spans multiple printed pages.
+    stockResultsBody.innerHTML = itemRows + (totals ? stockTotalsRowHtml(totals) : '');
   }
 
   async function runStockSearch(){
@@ -1921,8 +1930,7 @@
         currentStockItems = data.items;
         currentStockTotals = data.totals;
         stockStatusLine.innerHTML = `<span class="count">${data.items.length}</span> part(s) found`;
-        renderStockResults(data.items);
-        renderStockTotalsRow(data.totals);
+        renderStockResults(data.items, data.totals);
       } else {
         currentStockItems = [];
         stockStatusLine.textContent = 'Search failed';
@@ -1973,13 +1981,13 @@
         <td>${stockFormatCurrency(it['Balance Stock Price'])}</td>
       </tr>`).join('');
     const totalsRow = currentStockTotals ? `
-      <tr>
+      <tr class="stock-total-row">
         <td colspan="6" style="text-align:right;">TOTAL</td>
-        <td>${stockFormatNumber(currentStockTotals.totalStock)}</td>
-        <td>${stockFormatCurrency(currentStockTotals.totalStockPrice)}</td>
-        <td>${stockFormatNumber(currentStockTotals.usedStock)}</td>
-        <td>${stockFormatNumber(currentStockTotals.balanceStock)}</td>
-        <td>${stockFormatCurrency(currentStockTotals.balanceStockPrice)}</td>
+        <td style="text-align:right;">${stockFormatNumber(currentStockTotals.totalStock)}</td>
+        <td style="text-align:right;">${stockFormatCurrency(currentStockTotals.totalStockPrice)}</td>
+        <td style="text-align:right;">${stockFormatNumber(currentStockTotals.usedStock)}</td>
+        <td style="text-align:right;">${stockFormatNumber(currentStockTotals.balanceStock)}</td>
+        <td style="text-align:right;">${stockFormatCurrency(currentStockTotals.balanceStockPrice)}</td>
       </tr>` : '';
 
     stockPrintArea.innerHTML = `
@@ -1993,8 +2001,7 @@
             <th>SN</th><th>Part No</th><th>Description</th><th>Brand</th><th>Category</th>
             <th>Unit Price</th><th>Total Stock</th><th>Total Stock Price</th><th>Used Stock</th><th>Balance Stock</th><th>Balance Stock Price</th>
           </tr></thead>
-          <tbody>${rows}</tbody>
-          <tfoot>${totalsRow}</tfoot>
+          <tbody>${rows}${totalsRow}</tbody>
         </table>
       </div>`;
 
