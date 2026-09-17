@@ -410,13 +410,13 @@
   /* Stock tab */
   .stock-subtab{font-size:13px;padding:10px 8px;}
   .stock-subpanel{margin-top:16px;}
-  .stock-table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:12.5px;background:var(--panel);}
+  .stock-table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:12.5px;background:var(--panel);border:1px solid var(--ink);}
   .stock-table th{
     text-align:left;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;
-    letter-spacing:.03em;text-transform:uppercase;color:var(--ink-soft);
-    border-bottom:1.5px solid var(--ink);padding:7px 8px;
+    letter-spacing:.03em;text-transform:uppercase;color:#fff;background:var(--terracotta);
+    border:1px solid var(--ink);padding:11px 10px;
   }
-  .stock-table td{padding:7px 8px;border-bottom:1px dashed var(--rule);overflow-wrap:break-word;}
+  .stock-table td{padding:11px 10px;border:1px solid var(--rule);overflow-wrap:break-word;color:#111;}
   .stock-table th:nth-child(1), .stock-table td:nth-child(1){width:4%;}
   .stock-table th:nth-child(2), .stock-table td:nth-child(2){width:8%;}
   .stock-table th:nth-child(3), .stock-table td:nth-child(3){width:29%;white-space:normal;}
@@ -429,7 +429,7 @@
   .stock-table th:nth-child(10), .stock-table td:nth-child(10){width:6%;text-align:right;}
   .stock-table th:nth-child(11), .stock-table td:nth-child(11){width:9%;text-align:right;}
   .stock-table tfoot td{
-    border-top:2px solid var(--ink);border-bottom:none;font-weight:700;
+    border:1px solid var(--ink);font-weight:700;color:#111;
     background:var(--cream);
   }
   .stock-picker-results{
@@ -446,13 +446,13 @@
   .stock-picker-item .spi-meta{font-size:11.5px;color:var(--ink-soft);margin-top:2px;}
   .stock-print-table{width:100%;border-collapse:collapse;font-size:10px;}
   .stock-print-table th, .stock-print-table td{
-    border:1px solid #999;padding:5px 6px;text-align:left;white-space:nowrap;
+    border:1px solid #999;padding:8px 7px;text-align:left;color:#111;
   }
   .stock-print-table th{
-    background:#EFEAE0;font-family:'Barlow Condensed',sans-serif;font-weight:700;
+    background:#F79646;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;
     text-transform:uppercase;font-size:9.5px;
   }
-  .stock-print-table tfoot td{font-weight:700;border-top:2px solid #000;}
+  .stock-print-table tfoot td{font-weight:700;background:#FBF8F2;}
 
   /* Quotes line-items table */
   #qItemsTable input, #qItemsTable textarea{
@@ -607,7 +607,7 @@
   </div>
 
   <div class="wrap">
-    <div class="tabs">
+    <div class="tabs" id="mainTabs">
       <button class="tab-btn active" data-tab="entry">New Record</button>
       <button class="tab-btn" data-tab="search">Search History</button>
       <button class="tab-btn" data-tab="admin" id="adminTabBtn" style="display:none;">Admin</button>
@@ -1083,6 +1083,24 @@
   <div id="quotePrintArea" class="print-target"></div>
 
 <script>
+  /* ---------- Shared print helper: robust cleanup, doesn't rely solely on afterprint ---------- */
+  /* afterprint doesn't fire reliably on every browser/mobile — without a fallback,
+     a print container can get stuck visible on-screen (and can stack with another
+     print container on a later print). This guarantees it always gets hidden again. */
+  function printElementThenHide(el, extraCleanup){
+    let hidden = false;
+    function hide(){
+      if (hidden) return;
+      hidden = true;
+      el.style.display = 'none';
+      if (extraCleanup) extraCleanup();
+      window.removeEventListener('afterprint', hide);
+    }
+    window.addEventListener('afterprint', hide);
+    window.print();
+    setTimeout(hide, 1500); // fallback in case afterprint never fires
+  }
+
   /* ---------- Firebase init ---------- */
   const firebaseConfig = {
     apiKey: "AIzaSyBaw2sadsnnOjrmf_CAVMPd69c3jRzvmYg",
@@ -1154,7 +1172,7 @@
   });
 
   /* ---------- Tab switching ---------- */
-  const tabBtns = document.querySelectorAll('.tabs > .tab-btn'); // top-level tabs only, excludes stock sub-tabs
+  const tabBtns = document.querySelectorAll('#mainTabs > .tab-btn'); // top-level tabs only, excludes stock sub-tabs
   const quotesTabBtn = document.getElementById('quotesTabBtn');
   const stockTabBtn = document.getElementById('stockTabBtn');
   const tabPanels = { entry: document.getElementById('entryPanel'), search: document.getElementById('searchPanel'), admin: document.getElementById('adminPanel'), quotes: document.getElementById('quotesPanel'), stock: document.getElementById('stockPanel') };
@@ -1396,11 +1414,7 @@
     printMeta.innerHTML = `<strong>${filterBits.length ? filterBits.join(' · ') : 'All records'}</strong> &nbsp;·&nbsp; Printed: ${formatDate(new Date())} &nbsp;·&nbsp; ${currentRecords.length} record(s)`;
     const printArea = document.getElementById('printArea');
     printArea.style.display = 'block';
-    window.print();
-    window.addEventListener('afterprint', function resetPrint(){
-      printArea.style.display = 'none';
-      window.removeEventListener('afterprint', resetPrint);
-    });
+    printElementThenHide(printArea);
   }
 
   searchBtn.addEventListener('click', runSearch);
@@ -1818,12 +1832,7 @@
     quotePrintArea.innerHTML = qBuildDocHtml(qLastHeader, qLastCalc);
     document.getElementById('dynamicPageStyle').textContent = '@page{size:portrait;margin:15mm;}';
     quotePrintArea.style.display = 'block';
-    window.print();
-    window.addEventListener('afterprint', function resetPrint(){
-      quotePrintArea.style.display = 'none';
-      document.getElementById('dynamicPageStyle').textContent = '';
-      window.removeEventListener('afterprint', resetPrint);
-    });
+    printElementThenHide(quotePrintArea, () => { document.getElementById('dynamicPageStyle').textContent = ''; });
   });
 
   /* ---------- Stock: sub-tab switching (View / Update In / Update Out) ---------- */
@@ -1991,12 +2000,7 @@
 
     document.getElementById('dynamicPageStyle').textContent = '@page{size:landscape;margin:10mm;}';
     stockPrintArea.style.display = 'block';
-    window.print();
-    window.addEventListener('afterprint', function resetPrint(){
-      stockPrintArea.style.display = 'none';
-      document.getElementById('dynamicPageStyle').textContent = '';
-      window.removeEventListener('afterprint', resetPrint);
-    });
+    printElementThenHide(stockPrintArea, () => { document.getElementById('dynamicPageStyle').textContent = ''; });
   });
 
   /* ---------- Stock: shared part-picker (used by both Update In and Update Out) ---------- */
