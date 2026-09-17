@@ -1007,15 +1007,15 @@
     </div>
   </div>
 
-  <!-- Print-only view for Stock (kept separate from service-records and quote print templates) -->
-  <div id="stockPrintArea" class="print-target"></div>
-
   <p class="footer">
     Plot No. 169, N.G.O. Colony, Near Industrial Area, Mydukur Road, Proddatur – 516360, Y.S.R. Kadapa Dist., A.P.<br>
     ghousebasha55055@gmail.com · 9052155055
   </p>
 
   </div><!-- /#appShell -->
+
+  <!-- Print-only view for Stock (kept separate from service-records and quote print templates; must stay a sibling of #appShell, not nested inside it — the print CSS hides #appShell entirely) -->
+  <div id="stockPrintArea" class="print-target"></div>
 
   <!-- Print-only view -->
   <div id="printArea">
