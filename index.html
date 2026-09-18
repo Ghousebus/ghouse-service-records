@@ -883,32 +883,113 @@
 
       <!-- VIEW STOCK -->
       <div class="stock-subpanel active" id="stockViewPanel">
-        <div class="search-panel">
-          <h2>Search Stock</h2>
-          <div class="search-row">
-            <div class="field" style="grid-column:1 / -1;">
-              <label for="stockSearchInput">Part Description or Part Number</label>
-              <input type="text" id="stockSearchInput" placeholder="e.g. Blower Motor or 88-50-57-00177-00">
+        <div class="field" style="max-width:320px;margin-bottom:16px;">
+          <label for="stockViewModeSelect">Showing</label>
+          <select class="role-select" id="stockViewModeSelect">
+            <option value="stock">View Stock</option>
+            <option value="in">View Update In History</option>
+            <option value="out">View Update Out History</option>
+          </select>
+        </div>
+
+        <!-- MODE: View Stock -->
+        <div id="stockModeStock">
+          <div class="search-panel">
+            <h2>Search Stock</h2>
+            <div class="search-row">
+              <div class="field" style="grid-column:1 / -1;">
+                <label for="stockSearchInput">Part Description or Part Number</label>
+                <input type="text" id="stockSearchInput" placeholder="e.g. Blower Motor or 88-50-57-00177-00">
+              </div>
+            </div>
+            <div class="search-actions">
+              <button class="search-btn" id="stockSearchBtn">Search</button>
+              <button class="export-btn" id="stockExportBtn">Export to Excel</button>
+              <button class="print-btn" id="stockPrintBtn">Print</button>
             </div>
           </div>
-          <div class="search-actions">
-            <button class="search-btn" id="stockSearchBtn">Search</button>
-            <button class="export-btn" id="stockExportBtn">Export to Excel</button>
-            <button class="print-btn" id="stockPrintBtn">Print</button>
+
+          <div id="stockStatusLine" class="status-line" style="display:none;"></div>
+          <div style="overflow-x:auto;margin-top:14px;">
+            <table class="user-table stock-table" id="stockResultsTable">
+              <thead>
+                <tr>
+                  <th>SN</th><th>Part No</th><th>Description</th><th>Brand</th><th>Category</th>
+                  <th>Unit Price</th><th>Total Stock</th><th>Total Stock Price</th><th>Used Stock</th><th>Balance Stock</th><th>Balance Stock Price</th>
+                </tr>
+              </thead>
+              <tbody id="stockResultsBody"></tbody>
+            </table>
           </div>
         </div>
 
-        <div id="stockStatusLine" class="status-line" style="display:none;"></div>
-        <div style="overflow-x:auto;margin-top:14px;">
-          <table class="user-table stock-table" id="stockResultsTable">
-            <thead>
-              <tr>
-                <th>SN</th><th>Part No</th><th>Description</th><th>Brand</th><th>Category</th>
-                <th>Unit Price</th><th>Total Stock</th><th>Total Stock Price</th><th>Used Stock</th><th>Balance Stock</th><th>Balance Stock Price</th>
-              </tr>
-            </thead>
-            <tbody id="stockResultsBody"></tbody>
-          </table>
+        <!-- MODE: View Update In History -->
+        <div id="stockModeIn" style="display:none;">
+          <div class="search-panel">
+            <h2>Update In History</h2>
+            <div class="row2">
+              <div class="field">
+                <label for="stockInHistFrom">From Date</label>
+                <input type="date" id="stockInHistFrom">
+              </div>
+              <div class="field">
+                <label for="stockInHistTo">To Date</label>
+                <input type="date" id="stockInHistTo">
+              </div>
+            </div>
+            <div class="search-actions">
+              <button class="search-btn" id="stockInHistSearchBtn">Search</button>
+              <button class="print-btn" id="stockInHistPrintBtn">Print</button>
+            </div>
+          </div>
+
+          <div id="stockInHistStatus" class="status-line" style="display:none;"></div>
+          <div style="overflow-x:auto;margin-top:14px;">
+            <table class="user-table stock-table" id="stockInHistTable">
+              <thead>
+                <tr><th>Date</th><th>Description</th><th>Qty Added</th><th>Price Paid</th><th>Previous Avg Price</th><th>New Avg Price</th><th>Updated By</th></tr>
+              </thead>
+              <tbody id="stockInHistBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- MODE: View Update Out History -->
+        <div id="stockModeOut" style="display:none;">
+          <div class="search-panel">
+            <h2>Update Out History</h2>
+            <div class="row2">
+              <div class="field">
+                <label for="stockOutHistVehicle">Vehicle Number</label>
+                <input type="text" id="stockOutHistVehicle" placeholder="e.g. AP21 TA 1234">
+              </div>
+              <div class="field"></div>
+            </div>
+            <div class="row2">
+              <div class="field">
+                <label for="stockOutHistFrom">From Date</label>
+                <input type="date" id="stockOutHistFrom">
+              </div>
+              <div class="field">
+                <label for="stockOutHistTo">To Date</label>
+                <input type="date" id="stockOutHistTo">
+              </div>
+            </div>
+            <div class="search-actions">
+              <button class="search-btn" id="stockOutHistSearchBtn">Search</button>
+              <button class="print-btn" id="stockOutHistPrintBtn">Print</button>
+            </div>
+          </div>
+
+          <div id="stockOutHistStatus" class="status-line" style="display:none;"></div>
+          <div style="overflow-x:auto;margin-top:14px;">
+            <table class="user-table stock-table" id="stockOutHistTable">
+              <thead>
+                <tr><th>Date</th><th>Description</th><th>Qty Used</th><th>Vehicle Number</th><th>Updated By</th></tr>
+              </thead>
+              <tbody id="stockOutHistBody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -1856,14 +1937,34 @@
     in: document.getElementById('stockInPanel'),
     out: document.getElementById('stockOutPanel')
   };
-  stockSubtabBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      stockSubtabBtns.forEach(b => b.classList.toggle('active', b === btn));
-      Object.keys(stockSubpanels).forEach(k => {
-        stockSubpanels[k].style.display = (k === btn.dataset.stocktab) ? 'block' : 'none';
-      });
+  function activateStockSubtab(name){
+    stockSubtabBtns.forEach(b => b.classList.toggle('active', b.dataset.stocktab === name));
+    Object.keys(stockSubpanels).forEach(k => {
+      stockSubpanels[k].style.display = (k === name) ? 'block' : 'none';
     });
+  }
+  stockSubtabBtns.forEach(btn => {
+    btn.addEventListener('click', () => activateStockSubtab(btn.dataset.stocktab));
   });
+
+  /* ---------- Stock: View mode dropdown (View Stock / View Update In / View Update Out) ---------- */
+  const stockViewModeSelect = document.getElementById('stockViewModeSelect');
+  const stockViewModes = {
+    stock: document.getElementById('stockModeStock'),
+    in: document.getElementById('stockModeIn'),
+    out: document.getElementById('stockModeOut')
+  };
+  function activateStockViewMode(mode){
+    stockViewModeSelect.value = mode;
+    Object.keys(stockViewModes).forEach(k => {
+      stockViewModes[k].style.display = (k === mode) ? 'block' : 'none';
+    });
+    if (mode === 'in' && !stockInHistLoadedOnce){ stockInHistLoadedOnce = true; runStockInHistorySearch(); }
+    if (mode === 'out' && !stockOutHistLoadedOnce){ stockOutHistLoadedOnce = true; runStockOutHistorySearch(); }
+  }
+  stockViewModeSelect.addEventListener('change', () => activateStockViewMode(stockViewModeSelect.value));
+  let stockInHistLoadedOnce = false;
+  let stockOutHistLoadedOnce = false;
 
   /* ---------- Stock: shared helpers ---------- */
   function stockFormatCurrency(n){
@@ -1941,12 +2042,14 @@
       } else {
         currentStockItems = [];
         stockStatusLine.textContent = 'Search failed';
-        stockResultsBody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:20px;">Something went wrong.</td></tr>';
+        stockResultsBody.innerHTML = `<tr><td colspan="11" style="text-align:center;padding:20px;">${data.message || 'Something went wrong.'}</td></tr>`;
       }
     } catch (err) {
       currentStockItems = [];
-      stockStatusLine.textContent = 'Network error';
-      stockResultsBody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:20px;">Network error — please try again.</td></tr>';
+      console.error('stockSearch error:', err);
+      const detail = (err && (err.message || err.code)) ? `${err.code || ''} ${err.message || ''}`.trim() : 'Unknown error';
+      stockStatusLine.textContent = 'Error: ' + detail;
+      stockResultsBody.innerHTML = `<tr><td colspan="11" style="text-align:center;padding:20px;">Could not load stock — ${detail}</td></tr>`;
     } finally {
       stockSearchBtn.disabled = false;
       stockSearchBtn.textContent = 'Search';
@@ -2017,6 +2120,185 @@
     printElementThenHide(stockPrintArea, () => { document.getElementById('dynamicPageStyle').textContent = ''; });
   });
 
+  /* ---------- Stock: Update In History (view) ---------- */
+  const stockInHistFrom = document.getElementById('stockInHistFrom');
+  const stockInHistTo = document.getElementById('stockInHistTo');
+  const stockInHistSearchBtn = document.getElementById('stockInHistSearchBtn');
+  const stockInHistStatus = document.getElementById('stockInHistStatus');
+  const stockInHistBody = document.getElementById('stockInHistBody');
+  let currentStockInHistItems = [];
+
+  function renderStockInHistory(items){
+    if (items.length === 0){
+      stockInHistBody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--ink-soft);">No history found.</td></tr>';
+      return;
+    }
+    stockInHistBody.innerHTML = items.map(it => `
+      <tr>
+        <td>${formatDate(it['Date'])}</td>
+        <td>${it['Description'] || ''}</td>
+        <td style="text-align:right;">${stockFormatNumber(it['Qty Added'])}</td>
+        <td style="text-align:right;">${stockFormatCurrency(it['Price Paid'])}</td>
+        <td style="text-align:right;">${it['Previous Avg Price'] !== '' ? stockFormatCurrency(it['Previous Avg Price']) : '—'}</td>
+        <td style="text-align:right;">${stockFormatCurrency(it['New Avg Price'])}</td>
+        <td>${it['Updated By'] || '—'}</td>
+      </tr>`).join('');
+  }
+
+  async function runStockInHistorySearch(){
+    stockInHistSearchBtn.disabled = true;
+    stockInHistSearchBtn.textContent = 'Searching...';
+    stockInHistStatus.style.display = 'block';
+    stockInHistStatus.textContent = 'Loading...';
+    stockInHistBody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;">Loading…</td></tr>';
+    try {
+      const stockInHistory = functions.httpsCallable('stockInHistory');
+      const result = await stockInHistory({ dateFrom: stockInHistFrom.value, dateTo: stockInHistTo.value });
+      if (result.data.success){
+        currentStockInHistItems = result.data.items;
+        stockInHistStatus.innerHTML = `<span class="count">${result.data.items.length}</span> record(s) found`;
+        renderStockInHistory(result.data.items);
+      } else {
+        currentStockInHistItems = [];
+        stockInHistStatus.textContent = result.data.message || 'Search failed';
+        stockInHistBody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;">Something went wrong.</td></tr>';
+      }
+    } catch(err){
+      currentStockInHistItems = [];
+      const detail = (err && (err.message || err.code)) ? `${err.code || ''} ${err.message || ''}`.trim() : 'Unknown error';
+      stockInHistStatus.textContent = 'Error: ' + detail;
+      stockInHistBody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;">Could not load — ${detail}</td></tr>`;
+    } finally {
+      stockInHistSearchBtn.disabled = false;
+      stockInHistSearchBtn.textContent = 'Search';
+    }
+  }
+  stockInHistSearchBtn.addEventListener('click', runStockInHistorySearch);
+
+  document.getElementById('stockInHistPrintBtn').addEventListener('click', function(){
+    if (currentStockInHistItems.length === 0){ alert('No history to print. Run a search first.'); return; }
+    const rows = currentStockInHistItems.map(it => `
+      <tr>
+        <td>${formatDate(it['Date'])}</td>
+        <td>${it['Description'] || ''}</td>
+        <td style="text-align:right;">${stockFormatNumber(it['Qty Added'])}</td>
+        <td style="text-align:right;">${stockFormatCurrency(it['Price Paid'])}</td>
+        <td style="text-align:right;">${it['Previous Avg Price'] !== '' ? stockFormatCurrency(it['Previous Avg Price']) : '—'}</td>
+        <td style="text-align:right;">${stockFormatCurrency(it['New Avg Price'])}</td>
+        <td>${it['Updated By'] || '—'}</td>
+      </tr>`).join('');
+    const stockPrintArea = document.getElementById('stockPrintArea');
+    stockPrintArea.innerHTML = `
+      <div style="border:2px solid #000;padding:16px 20px;font-family:Arial,sans-serif;">
+        <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:10px;">
+          <div style="font-weight:800;font-size:18px;color:#F79646;">GHOUSE — Update In History</div>
+          <div style="font-size:11px;">Printed: ${new Date().toLocaleDateString('en-IN')} · ${currentStockInHistItems.length} record(s)</div>
+        </div>
+        <table class="stock-print-table">
+          <thead><tr><th>Date</th><th>Description</th><th>Qty Added</th><th>Price Paid</th><th>Previous Avg Price</th><th>New Avg Price</th><th>Updated By</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+    document.getElementById('dynamicPageStyle').textContent = '@page{size:landscape;margin:10mm;}';
+    stockPrintArea.style.display = 'block';
+    printElementThenHide(stockPrintArea, () => { document.getElementById('dynamicPageStyle').textContent = ''; });
+  });
+
+  /* ---------- Stock: Update Out History (view) ---------- */
+  const stockOutHistVehicle = document.getElementById('stockOutHistVehicle');
+  const stockOutHistFrom = document.getElementById('stockOutHistFrom');
+  const stockOutHistTo = document.getElementById('stockOutHistTo');
+  const stockOutHistSearchBtn = document.getElementById('stockOutHistSearchBtn');
+  const stockOutHistStatus = document.getElementById('stockOutHistStatus');
+  const stockOutHistBody = document.getElementById('stockOutHistBody');
+  let currentStockOutHistItems = [];
+
+  function renderStockOutHistory(items){
+    if (items.length === 0){
+      stockOutHistBody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--ink-soft);">No history found.</td></tr>';
+      return;
+    }
+    stockOutHistBody.innerHTML = items.map(it => `
+      <tr>
+        <td>${formatDate(it['Date'])}</td>
+        <td>${it['Description'] || ''}</td>
+        <td style="text-align:right;">${stockFormatNumber(it['Qty Used'])}</td>
+        <td>${it['Vehicle Number'] || '—'}</td>
+        <td>${it['Updated By'] || '—'}</td>
+      </tr>`).join('');
+  }
+
+  async function runStockOutHistorySearch(){
+    stockOutHistSearchBtn.disabled = true;
+    stockOutHistSearchBtn.textContent = 'Searching...';
+    stockOutHistStatus.style.display = 'block';
+    stockOutHistStatus.textContent = 'Loading...';
+    stockOutHistBody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;">Loading…</td></tr>';
+    try {
+      const stockOutHistory = functions.httpsCallable('stockOutHistory');
+      const result = await stockOutHistory({
+        vehicleNumber: stockOutHistVehicle.value.trim(),
+        dateFrom: stockOutHistFrom.value,
+        dateTo: stockOutHistTo.value
+      });
+      if (result.data.success){
+        currentStockOutHistItems = result.data.items;
+        stockOutHistStatus.innerHTML = `<span class="count">${result.data.items.length}</span> record(s) found`;
+        renderStockOutHistory(result.data.items);
+      } else {
+        currentStockOutHistItems = [];
+        stockOutHistStatus.textContent = result.data.message || 'Search failed';
+        stockOutHistBody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;">Something went wrong.</td></tr>';
+      }
+    } catch(err){
+      currentStockOutHistItems = [];
+      const detail = (err && (err.message || err.code)) ? `${err.code || ''} ${err.message || ''}`.trim() : 'Unknown error';
+      stockOutHistStatus.textContent = 'Error: ' + detail;
+      stockOutHistBody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:20px;">Could not load — ${detail}</td></tr>`;
+    } finally {
+      stockOutHistSearchBtn.disabled = false;
+      stockOutHistSearchBtn.textContent = 'Search';
+    }
+  }
+  stockOutHistSearchBtn.addEventListener('click', runStockOutHistorySearch);
+
+  document.getElementById('stockOutHistPrintBtn').addEventListener('click', function(){
+    if (currentStockOutHistItems.length === 0){ alert('No history to print. Run a search first.'); return; }
+    const rows = currentStockOutHistItems.map(it => `
+      <tr>
+        <td>${formatDate(it['Date'])}</td>
+        <td>${it['Description'] || ''}</td>
+        <td style="text-align:right;">${stockFormatNumber(it['Qty Used'])}</td>
+        <td>${it['Vehicle Number'] || '—'}</td>
+        <td>${it['Updated By'] || '—'}</td>
+      </tr>`).join('');
+    const stockPrintArea = document.getElementById('stockPrintArea');
+    stockPrintArea.innerHTML = `
+      <div style="border:2px solid #000;padding:16px 20px;font-family:Arial,sans-serif;">
+        <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:10px;">
+          <div style="font-weight:800;font-size:18px;color:#F79646;">GHOUSE — Update Out History</div>
+          <div style="font-size:11px;">Printed: ${new Date().toLocaleDateString('en-IN')} · ${currentStockOutHistItems.length} record(s)</div>
+        </div>
+        <table class="stock-print-table">
+          <thead><tr><th>Date</th><th>Description</th><th>Qty Used</th><th>Vehicle Number</th><th>Updated By</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+    document.getElementById('dynamicPageStyle').textContent = '@page{size:landscape;margin:10mm;}';
+    stockPrintArea.style.display = 'block';
+    printElementThenHide(stockPrintArea, () => { document.getElementById('dynamicPageStyle').textContent = ''; });
+  });
+
+  /* ---------- Stock: flash the relevant history briefly after a successful update, then return ---------- */
+  function flashStockHistoryThenReturn(kind){
+    activateStockSubtab('view');
+    activateStockViewMode(kind);
+    if (kind === 'in') runStockInHistorySearch(); else runStockOutHistorySearch();
+    setTimeout(() => {
+      activateStockSubtab(kind);
+    }, 5000);
+  }
+
   /* ---------- Stock: shared part-picker (used by both Update In and Update Out) ---------- */
   function setupStockPicker(searchInputEl, resultsEl, onSelect){
     let debounceTimer = null;
@@ -2086,6 +2368,8 @@
       msgEl.textContent = 'Enter a valid quantity and price.'; msgEl.className = 'admin-msg show err'; return;
     }
     const btn = document.getElementById('stockInSubmitBtn');
+    const beforeBalance = stockInSelectedItem['Balance Stock'];
+    const partDescription = stockInSelectedItem['Description'];
     btn.disabled = true; btn.textContent = 'Updating...';
     try {
       const stockInExisting = functions.httpsCallable('stockInExisting');
@@ -2097,13 +2381,33 @@
         document.getElementById('stockInQty').value = '';
         document.getElementById('stockInPrice').value = '';
         stockInSelectedItem = null;
+        flashStockHistoryThenReturn('in');
       } else {
         msgEl.textContent = result.data.message || 'Could not update stock.';
         msgEl.className = 'admin-msg show err';
       }
     } catch(err){
-      msgEl.textContent = 'Network error — please try again.';
+      console.error('Stock update error:', err);
+      const detail = (err && (err.message || err.code)) ? `${err.code || ''} ${err.message || ''}`.trim() : 'Unknown error';
+      msgEl.textContent = 'Checking whether it actually saved...';
       msgEl.className = 'admin-msg show err';
+      try {
+        const stockSearch = functions.httpsCallable('stockSearch');
+        const recheck = await stockSearch({ q: partDescription });
+        const match = recheck.data && recheck.data.success ? recheck.data.items.find(i => i['Description'] === partDescription) : null;
+        if (match && match['Balance Stock'] !== beforeBalance){
+          msgEl.textContent = `The connection dropped, but it DID save — new balance is now ${stockFormatNumber(match['Balance Stock'])}. (${detail})`;
+          document.getElementById('stockInSelected').style.display = 'none';
+          document.getElementById('stockInQty').value = '';
+          document.getElementById('stockInPrice').value = '';
+          stockInSelectedItem = null;
+          flashStockHistoryThenReturn('in');
+        } else {
+          msgEl.textContent = `Could not save (${detail}) — balance is unchanged, so it did NOT go through. Please retry.`;
+        }
+      } catch(e2){
+        msgEl.textContent = `Could not save (${detail}), and could not verify either — please check View Stock manually before retrying.`;
+      }
     } finally {
       btn.disabled = false; btn.textContent = 'Update Stock';
     }
@@ -2146,7 +2450,9 @@
         msgEl.className = 'admin-msg show err';
       }
     } catch(err){
-      msgEl.textContent = 'Network error — please try again.';
+      console.error('Stock update error:', err);
+      const detail = (err && (err.message || err.code)) ? `${err.code || ''} ${err.message || ''}`.trim() : 'Unknown error';
+      msgEl.textContent = 'Could not save — ' + detail + '. Check View Stock to confirm whether it actually went through before retrying.';
       msgEl.className = 'admin-msg show err';
     } finally {
       btn.disabled = false; btn.textContent = 'Add Part to Stock';
@@ -2183,6 +2489,8 @@
       msgEl.textContent = 'Enter a valid quantity.'; msgEl.className = 'admin-msg show err'; return;
     }
     const btn = document.getElementById('stockOutSubmitBtn');
+    const beforeBalance = stockOutSelectedItem['Balance Stock'];
+    const partDescription = stockOutSelectedItem['Description'];
     btn.disabled = true; btn.textContent = 'Updating...';
     try {
       const stockOut = functions.httpsCallable('stockOut');
@@ -2194,13 +2502,33 @@
         document.getElementById('stockOutQty').value = '';
         document.getElementById('stockOutVehicle').value = '';
         stockOutSelectedItem = null;
+        flashStockHistoryThenReturn('out');
       } else {
         msgEl.textContent = result.data.message || 'Could not update stock.';
         msgEl.className = 'admin-msg show err';
       }
     } catch(err){
-      msgEl.textContent = 'Network error — please try again.';
+      console.error('Stock update error:', err);
+      const detail = (err && (err.message || err.code)) ? `${err.code || ''} ${err.message || ''}`.trim() : 'Unknown error';
+      msgEl.textContent = 'Checking whether it actually saved...';
       msgEl.className = 'admin-msg show err';
+      try {
+        const stockSearch = functions.httpsCallable('stockSearch');
+        const recheck = await stockSearch({ q: partDescription });
+        const match = recheck.data && recheck.data.success ? recheck.data.items.find(i => i['Description'] === partDescription) : null;
+        if (match && match['Balance Stock'] !== beforeBalance){
+          msgEl.textContent = `The connection dropped, but it DID save — new balance is now ${stockFormatNumber(match['Balance Stock'])}. (${detail})`;
+          document.getElementById('stockOutSelected').style.display = 'none';
+          document.getElementById('stockOutQty').value = '';
+          document.getElementById('stockOutVehicle').value = '';
+          stockOutSelectedItem = null;
+          flashStockHistoryThenReturn('out');
+        } else {
+          msgEl.textContent = `Could not save (${detail}) — balance is unchanged, so it did NOT go through. Please retry.`;
+        }
+      } catch(e2){
+        msgEl.textContent = `Could not save (${detail}), and could not verify either — please check View Stock manually before retrying.`;
+      }
     } finally {
       btn.disabled = false; btn.textContent = 'Update Stock';
     }
