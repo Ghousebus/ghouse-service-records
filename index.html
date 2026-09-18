@@ -439,6 +439,23 @@
     border:1px solid var(--ink);font-weight:700;color:#111;
     background:var(--cream);
   }
+
+  /* History tables have their own column structure — these ID-scoped rules
+     override the View Stock table's 11-column widths/alignment above (which don't apply here) */
+  #stockInHistTable th:nth-child(1), #stockInHistTable td:nth-child(1){width:9%;text-align:left;}
+  #stockInHistTable th:nth-child(2), #stockInHistTable td:nth-child(2){width:30%;text-align:left;white-space:normal;}
+  #stockInHistTable th:nth-child(3), #stockInHistTable td:nth-child(3){width:8%;text-align:right;}
+  #stockInHistTable th:nth-child(4), #stockInHistTable td:nth-child(4){width:12%;text-align:right;}
+  #stockInHistTable th:nth-child(5), #stockInHistTable td:nth-child(5){width:13%;text-align:right;}
+  #stockInHistTable th:nth-child(6), #stockInHistTable td:nth-child(6){width:13%;text-align:right;}
+  #stockInHistTable th:nth-child(7), #stockInHistTable td:nth-child(7){width:15%;text-align:left;}
+
+  #stockOutHistTable th:nth-child(1), #stockOutHistTable td:nth-child(1){width:10%;text-align:left;}
+  #stockOutHistTable th:nth-child(2), #stockOutHistTable td:nth-child(2){width:40%;text-align:left;white-space:normal;}
+  #stockOutHistTable th:nth-child(3), #stockOutHistTable td:nth-child(3){width:10%;text-align:right;}
+  #stockOutHistTable th:nth-child(4), #stockOutHistTable td:nth-child(4){width:20%;text-align:left;}
+  #stockOutHistTable th:nth-child(5), #stockOutHistTable td:nth-child(5){width:20%;text-align:left;}
+
   .stock-picker-results{
     margin-top:8px;border:1.5px solid var(--rule);border-radius:2px;max-height:220px;overflow-y:auto;
     display:none;
@@ -883,13 +900,16 @@
 
       <!-- VIEW STOCK -->
       <div class="stock-subpanel active" id="stockViewPanel">
-        <div class="field" style="max-width:320px;margin-bottom:16px;">
-          <label for="stockViewModeSelect">Showing</label>
-          <select class="role-select" id="stockViewModeSelect">
-            <option value="stock">View Stock</option>
-            <option value="in">View Update In History</option>
-            <option value="out">View Update Out History</option>
-          </select>
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:16px;">
+          <div class="field" style="max-width:320px;margin-bottom:0;">
+            <label for="stockViewModeSelect">Showing</label>
+            <select class="role-select" id="stockViewModeSelect">
+              <option value="stock">View Stock</option>
+              <option value="in">View Update In History</option>
+              <option value="out">View Update Out History</option>
+            </select>
+          </div>
+          <button type="button" id="stockBackBtn" class="btn-edit" style="display:none;width:auto;padding:11px 20px;">← Back</button>
         </div>
 
         <!-- MODE: View Stock -->
@@ -1944,7 +1964,11 @@
     });
   }
   stockSubtabBtns.forEach(btn => {
-    btn.addEventListener('click', () => activateStockSubtab(btn.dataset.stocktab));
+    btn.addEventListener('click', () => {
+      activateStockSubtab(btn.dataset.stocktab);
+      stockBackBtn.style.display = 'none';
+      stockReturnToSubtab = null;
+    });
   });
 
   /* ---------- Stock: View mode dropdown (View Stock / View Update In / View Update Out) ---------- */
@@ -2289,15 +2313,24 @@
     printElementThenHide(stockPrintArea, () => { document.getElementById('dynamicPageStyle').textContent = ''; });
   });
 
-  /* ---------- Stock: flash the relevant history briefly after a successful update, then return ---------- */
+  /* ---------- Stock: show the relevant history after a successful update, with a manual Back button ---------- */
+  let stockReturnToSubtab = null;
+  const stockBackBtn = document.getElementById('stockBackBtn');
+
   function flashStockHistoryThenReturn(kind){
+    stockReturnToSubtab = kind;
     activateStockSubtab('view');
     activateStockViewMode(kind);
     if (kind === 'in') runStockInHistorySearch(); else runStockOutHistorySearch();
-    setTimeout(() => {
-      activateStockSubtab(kind);
-    }, 5000);
+    stockBackBtn.style.display = 'inline-block';
+    stockBackBtn.textContent = kind === 'in' ? '← Back to Update In' : '← Back to Update Out';
   }
+
+  stockBackBtn.addEventListener('click', () => {
+    stockBackBtn.style.display = 'none';
+    if (stockReturnToSubtab) activateStockSubtab(stockReturnToSubtab);
+    stockReturnToSubtab = null;
+  });
 
   /* ---------- Stock: shared part-picker (used by both Update In and Update Out) ---------- */
   function setupStockPicker(searchInputEl, resultsEl, onSelect){
