@@ -854,13 +854,13 @@
           <thead>
             <tr>
               <th style="width:5%;">SNo</th>
-              <th style="width:12%;">Part No</th>
-              <th style="width:10%;">HSN Code</th>
+              <th style="width:12%;">Part Number</th>
               <th style="width:23%;">Part Description</th>
+              <th style="width:10%;">HSN Code</th>
               <th style="width:7%;">Qty</th>
+              <th style="width:11%;">Rate</th>
               <th style="width:8%;">GST%</th>
               <th style="width:11%;">GST Amount</th>
-              <th style="width:11%;">Rate</th>
               <th style="width:11%;">Amount</th>
               <th style="width:6%;"></th>
             </tr>
@@ -919,27 +919,21 @@
           </div>
 
           <hr class="divider">
-          <p class="section-label">Distributor</p>
-          <div class="row2">
-            <div class="field">
-              <label for="soDistributorName">Distributor Name</label>
-              <input type="text" id="soDistributorName" placeholder="e.g. Eberspächer India Pvt Ltd">
-            </div>
-            <div class="field">
-              <label for="soDistributorCode">Distributor Code</label>
-              <input type="text" id="soDistributorCode" placeholder="e.g. EB-AP-0417">
-            </div>
+          <p class="section-label">Customer Details</p>
+          <div class="field">
+            <label for="soDistributorCode">Customer No</label>
+            <input type="text" id="soDistributorCode" placeholder="Enter customer number">
           </div>
 
           <hr class="divider">
           <p class="section-label">To</p>
           <div class="field">
-            <label for="soToName">Organisation / Recipient Name</label>
-            <input type="text" id="soToName" placeholder="e.g. Sri Balaji Travels">
-          </div>
-          <div class="field">
             <label for="soAttn">Attn</label>
             <input type="text" id="soAttn" placeholder="e.g. The Depot Manager">
+          </div>
+          <div class="field">
+            <label for="soToName">Organisation / Recipient Name</label>
+            <input type="text" id="soToName" placeholder="e.g. Sri Balaji Travels">
           </div>
           <div class="field">
             <label for="soAddress">Complete Address</label>
@@ -954,13 +948,13 @@
             <thead>
               <tr>
                 <th style="width:5%;">SNo</th>
-                <th style="width:12%;">Part No</th>
-                <th style="width:10%;">HSN Code</th>
+                <th style="width:12%;">Part Number</th>
                 <th style="width:23%;">Part Description</th>
+                <th style="width:10%;">HSN Code</th>
                 <th style="width:7%;">Qty</th>
+                <th style="width:11%;">Rate</th>
                 <th style="width:8%;">GST%</th>
                 <th style="width:11%;">GST Amount</th>
-                <th style="width:11%;">Rate</th>
                 <th style="width:11%;">Amount</th>
                 <th style="width:6%;"></th>
               </tr>
@@ -1772,13 +1766,13 @@
     tr.dataset.rowId = qRowCounter;
     tr.innerHTML = `
       <td class="q-sno" style="text-align:center;"></td>
-      <td><input type="text" class="q-partno" placeholder="Part No"></td>
-      <td><input type="text" class="q-hsn" placeholder="HSN Code"></td>
+      <td><input type="text" class="q-partno" placeholder="Part Number"></td>
       <td><textarea class="q-desc" rows="1" placeholder="Part description"></textarea></td>
+      <td><input type="text" class="q-hsn" placeholder="HSN Code"></td>
       <td><input type="number" class="q-qty" value="1" step="0.01"></td>
+      <td><input type="number" class="q-rate" value="0" step="0.01"></td>
       <td><input type="number" class="q-gst" value="18" step="0.01"></td>
       <td class="q-gstamt">₹0.00</td>
-      <td><input type="number" class="q-rate" value="0" step="0.01"></td>
       <td class="q-amount">₹0.00</td>
       <td><button type="button" class="q-remove-btn" title="Remove row">×</button></td>
     `;
@@ -1901,12 +1895,12 @@
       <tr>
         <td style="padding:6px;border:1px solid #ccc;text-align:center;">${idx + 1}</td>
         <td style="padding:6px;border:1px solid #ccc;">${it.partNo || '—'}</td>
-        <td style="padding:6px;border:1px solid #ccc;text-align:center;">${it.hsn || '—'}</td>
         <td style="padding:6px;border:1px solid #ccc;">${it.description || '—'}</td>
+        <td style="padding:6px;border:1px solid #ccc;text-align:center;">${it.hsn || '—'}</td>
         <td style="padding:6px;border:1px solid #ccc;text-align:center;">${it.qty}</td>
+        <td style="padding:6px;border:1px solid #ccc;text-align:right;">${qFormatNumber(it.rate)}</td>
         <td style="padding:6px;border:1px solid #ccc;text-align:center;">${it.gstPct}%</td>
         <td style="padding:6px;border:1px solid #ccc;text-align:right;">${qFormatNumber(it.gstAmt)}</td>
-        <td style="padding:6px;border:1px solid #ccc;text-align:right;">${qFormatNumber(it.rate)}</td>
         <td style="padding:6px;border:1px solid #ccc;text-align:right;">${qFormatNumber(it.amount)}</td>
       </tr>`).join('');
 
@@ -1961,13 +1955,13 @@
           <thead>
             <tr style="background:#F79646;">
               <th style="padding:6px;border:1px solid #ccc;color:#fff;">SNo</th>
-              <th style="padding:6px;border:1px solid #ccc;color:#fff;text-align:left;">Part No</th>
-              <th style="padding:6px;border:1px solid #ccc;color:#fff;">HSN Code</th>
+              <th style="padding:6px;border:1px solid #ccc;color:#fff;text-align:left;">Part Number</th>
               <th style="padding:6px;border:1px solid #ccc;color:#fff;text-align:left;">Part Description</th>
+              <th style="padding:6px;border:1px solid #ccc;color:#fff;">HSN Code</th>
               <th style="padding:6px;border:1px solid #ccc;color:#fff;">Qty</th>
+              <th style="padding:6px;border:1px solid #ccc;color:#fff;">Rate</th>
               <th style="padding:6px;border:1px solid #ccc;color:#fff;">GST%</th>
               <th style="padding:6px;border:1px solid #ccc;color:#fff;">GST Amount</th>
-              <th style="padding:6px;border:1px solid #ccc;color:#fff;">Rate</th>
               <th style="padding:6px;border:1px solid #ccc;color:#fff;">Amount</th>
             </tr>
           </thead>
@@ -2083,13 +2077,13 @@
     tr.dataset.rowId = soRowCounter;
     tr.innerHTML = `
       <td class="so-sno" style="text-align:center;"></td>
-      <td><input type="text" class="so-partno" placeholder="Part No"></td>
-      <td><input type="text" class="so-hsn" placeholder="HSN Code"></td>
+      <td><input type="text" class="so-partno" placeholder="Part Number"></td>
       <td><textarea class="so-desc" rows="1" placeholder="Part description"></textarea></td>
+      <td><input type="text" class="so-hsn" placeholder="HSN Code"></td>
       <td><input type="number" class="so-qty" value="1" step="0.01"></td>
+      <td><input type="number" class="so-rate" value="0" step="0.01"></td>
       <td><input type="number" class="so-gst" value="18" step="0.01"></td>
       <td class="so-gstamt">Rs. 0.00</td>
-      <td><input type="number" class="so-rate" value="0" step="0.01"></td>
       <td class="so-amount">Rs. 0.00</td>
       <td><button type="button" class="q-remove-btn" title="Remove row">×</button></td>
     `;
@@ -2151,7 +2145,6 @@
       number: document.getElementById('soNumber').value.trim() || 'GHOUSE-SO-001',
       date: document.getElementById('soDate').value,
       reference: document.getElementById('soReference').value.trim(),
-      distributorName: document.getElementById('soDistributorName').value.trim(),
       distributorCode: document.getElementById('soDistributorCode').value.trim(),
       toName: document.getElementById('soToName').value.trim(),
       attn: document.getElementById('soAttn').value.trim(),
@@ -2171,12 +2164,12 @@
       <tr>
         <td style="padding:6px;border:1px solid #ccc;text-align:center;">${idx + 1}</td>
         <td style="padding:6px;border:1px solid #ccc;">${it.partNo || '—'}</td>
-        <td style="padding:6px;border:1px solid #ccc;text-align:center;">${it.hsn || '—'}</td>
         <td style="padding:6px;border:1px solid #ccc;">${it.description || '—'}</td>
+        <td style="padding:6px;border:1px solid #ccc;text-align:center;">${it.hsn || '—'}</td>
         <td style="padding:6px;border:1px solid #ccc;text-align:center;">${it.qty}</td>
+        <td style="padding:6px;border:1px solid #ccc;text-align:right;">${qFormatNumber(it.rate)}</td>
         <td style="padding:6px;border:1px solid #ccc;text-align:center;">${it.gstPct}%</td>
         <td style="padding:6px;border:1px solid #ccc;text-align:right;">${qFormatNumber(it.gstAmt)}</td>
-        <td style="padding:6px;border:1px solid #ccc;text-align:right;">${qFormatNumber(it.rate)}</td>
         <td style="padding:6px;border:1px solid #ccc;text-align:right;">${qFormatNumber(it.amount)}</td>
       </tr>`).join('');
 
@@ -2216,14 +2209,13 @@
         </div>
 
         <div style="font-size:12.5px;margin-bottom:14px;padding:10px 12px;background:#FBF8F2;border:1px solid #DFD6C4;">
-          <div><b>Distributor Name:</b> ${header.distributorName || '—'}</div>
-          <div><b>Distributor Code:</b> ${header.distributorCode || '—'}</div>
+          <div><b>Customer No:</b> ${header.distributorCode || '—'}</div>
         </div>
 
         <div style="font-size:12.5px;margin-bottom:14px;">
           <div style="font-weight:700;margin-bottom:3px;">To</div>
-          <div>${header.toName || '—'}</div>
           ${header.attn ? '<div>Attn: ' + header.attn + '</div>' : ''}
+          <div>${header.toName || '—'}</div>
           <div>${(header.address || '').replace(/\n/g,'<br>')}</div>
         </div>
 
@@ -2233,13 +2225,13 @@
           <thead>
             <tr style="background:#F79646;">
               <th style="padding:6px;border:1px solid #ccc;color:#fff;">SNo</th>
-              <th style="padding:6px;border:1px solid #ccc;color:#fff;text-align:left;">Part No</th>
-              <th style="padding:6px;border:1px solid #ccc;color:#fff;">HSN Code</th>
+              <th style="padding:6px;border:1px solid #ccc;color:#fff;text-align:left;">Part Number</th>
               <th style="padding:6px;border:1px solid #ccc;color:#fff;text-align:left;">Part Description</th>
+              <th style="padding:6px;border:1px solid #ccc;color:#fff;">HSN Code</th>
               <th style="padding:6px;border:1px solid #ccc;color:#fff;">Qty</th>
+              <th style="padding:6px;border:1px solid #ccc;color:#fff;">Rate</th>
               <th style="padding:6px;border:1px solid #ccc;color:#fff;">GST%</th>
               <th style="padding:6px;border:1px solid #ccc;color:#fff;">GST Amount</th>
-              <th style="padding:6px;border:1px solid #ccc;color:#fff;">Rate</th>
               <th style="padding:6px;border:1px solid #ccc;color:#fff;">Amount</th>
             </tr>
           </thead>
