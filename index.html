@@ -798,6 +798,15 @@
 
     <!-- QUOTES TAB (admin only) -->
     <div class="tab-panel" id="quotesPanel">
+      <div class="field" style="max-width:320px;margin-bottom:16px;">
+        <label for="quoteDocTypeSelect">Document Type</label>
+        <select class="role-select" id="quoteDocTypeSelect">
+          <option value="quote">Quote</option>
+          <option value="supply">Supply Order</option>
+        </select>
+      </div>
+
+      <div id="quoteModeQuote">
       <div class="admin-panel" id="qHeaderPanel">
         <h2>New Quote</h2>
         <div class="row2">
@@ -886,6 +895,107 @@
 
         <div class="search-actions" style="margin-top:16px;display:none;" id="qFinalActions">
           <button class="print-btn" id="qPrintBtn" style="flex:1;">Print Quote</button>
+        </div>
+      </div>
+      </div>
+
+      <!-- SUPPLY ORDER MODE -->
+      <div id="quoteModeSupply" style="display:none;">
+        <div class="admin-panel" id="soHeaderPanel">
+          <h2>New Supply Order</h2>
+          <div class="row2">
+            <div class="field">
+              <label for="soNumber">Order Number</label>
+              <input type="text" id="soNumber" placeholder="e.g. GHOUSE-SO-001">
+            </div>
+            <div class="field">
+              <label for="soDate">Order Date</label>
+              <input type="date" id="soDate">
+            </div>
+          </div>
+          <div class="field">
+            <label for="soReference">Reference</label>
+            <input type="text" id="soReference" placeholder="e.g. AP 16Z 0657">
+          </div>
+
+          <hr class="divider">
+          <p class="section-label">Distributor</p>
+          <div class="row2">
+            <div class="field">
+              <label for="soDistributorName">Distributor Name</label>
+              <input type="text" id="soDistributorName" placeholder="e.g. Eberspächer India Pvt Ltd">
+            </div>
+            <div class="field">
+              <label for="soDistributorCode">Distributor Code</label>
+              <input type="text" id="soDistributorCode" placeholder="e.g. EB-AP-0417">
+            </div>
+          </div>
+
+          <hr class="divider">
+          <p class="section-label">To</p>
+          <div class="field">
+            <label for="soToName">Organisation / Recipient Name</label>
+            <input type="text" id="soToName" placeholder="e.g. Sri Balaji Travels">
+          </div>
+          <div class="field">
+            <label for="soAttn">Attn</label>
+            <input type="text" id="soAttn" placeholder="e.g. The Depot Manager">
+          </div>
+          <div class="field">
+            <label for="soAddress">Complete Address</label>
+            <textarea id="soAddress" placeholder="Full address" style="min-height:110px;"></textarea>
+          </div>
+        </div>
+
+        <div class="admin-panel" id="soLineItemsPanel" style="margin-top:16px;">
+          <h2>Line Items</h2>
+          <p style="font-size:12.5px;color:var(--ink-soft);margin:-8px 0 14px;">GST% applies per line and is auto-split into CGST + SGST for the final supply order.</p>
+          <table class="user-table" id="soItemsTable">
+            <thead>
+              <tr>
+                <th style="width:5%;">SNo</th>
+                <th style="width:12%;">Part No</th>
+                <th style="width:10%;">HSN Code</th>
+                <th style="width:23%;">Part Description</th>
+                <th style="width:7%;">Qty</th>
+                <th style="width:8%;">GST%</th>
+                <th style="width:11%;">GST Amount</th>
+                <th style="width:11%;">Rate</th>
+                <th style="width:11%;">Amount</th>
+                <th style="width:6%;"></th>
+              </tr>
+            </thead>
+            <tbody id="soItemsBody"></tbody>
+          </table>
+          <div class="search-actions" style="margin-top:14px;">
+            <button type="button" class="print-btn" id="soAddRowBtn" style="flex:none;min-width:140px;">+ Add Row</button>
+          </div>
+
+          <div class="review-list" style="margin-top:20px;">
+            <div class="review-item"><dt>Sub Total</dt><dd id="soSubTotal">Rs. 0.00</dd></div>
+            <div class="review-item"><dt>GST Total</dt><dd id="soGstTotal">Rs. 0.00</dd></div>
+            <div class="review-item"><dt style="font-size:15px;">Grand Total</dt><dd style="font-size:16px;font-weight:700;" id="soGrandTotal">Rs. 0.00</dd></div>
+          </div>
+          <p style="font-size:13px;color:var(--ink-soft);font-style:italic;margin-top:10px;" id="soAmountWords"></p>
+        </div>
+
+        <div class="search-actions" style="margin-top:16px;">
+          <button class="search-btn" id="soPreviewBtn">Preview Supply Order</button>
+        </div>
+        <div class="admin-msg" id="soMsg"></div>
+
+        <!-- SUPPLY ORDER PREVIEW (white document view) -->
+        <div id="soPreviewWrap" style="display:none;margin-top:22px;">
+          <div id="soPreviewDoc" style="background:#FFFFFF;border:1.5px solid var(--ink);padding:26px 30px;color:#111;"></div>
+
+          <div class="search-actions" style="margin-top:16px;" id="soReviewActions">
+            <button type="button" class="btn-edit" id="soEditBtn" style="flex:1;">Edit Supply Order</button>
+            <button type="button" id="soSubmitBtn" style="flex:1;">Submit Supply Order</button>
+          </div>
+
+          <div class="search-actions" style="margin-top:16px;display:none;" id="soFinalActions">
+            <button class="print-btn" id="soPrintBtn" style="flex:1;">Print Supply Order</button>
+          </div>
         </div>
       </div>
     </div>
@@ -1945,6 +2055,274 @@
     if (!qLastHeader) return;
     const quotePrintArea = document.getElementById('quotePrintArea');
     quotePrintArea.innerHTML = qBuildDocHtml(qLastHeader, qLastCalc);
+    document.getElementById('dynamicPageStyle').textContent = '@page{size:portrait;margin:15mm;}';
+    quotePrintArea.style.display = 'block';
+    printElementThenHide(quotePrintArea, () => { document.getElementById('dynamicPageStyle').textContent = ''; });
+  });
+
+  /* ---------- Quotes / Supply Order: document type dropdown ---------- */
+  const quoteDocTypeSelect = document.getElementById('quoteDocTypeSelect');
+  const quoteModeQuote = document.getElementById('quoteModeQuote');
+  const quoteModeSupply = document.getElementById('quoteModeSupply');
+  quoteDocTypeSelect.addEventListener('change', () => {
+    const isSupply = quoteDocTypeSelect.value === 'supply';
+    quoteModeQuote.style.display = isSupply ? 'none' : 'block';
+    quoteModeSupply.style.display = isSupply ? 'block' : 'none';
+  });
+
+  /* ---------- Supply Order: same pattern as Quote, with its own fields/doc layout ---------- */
+  document.getElementById('soDate').valueAsDate = new Date();
+
+  const soItemsBody = document.getElementById('soItemsBody');
+  const soAddRowBtn = document.getElementById('soAddRowBtn');
+  let soRowCounter = 0;
+
+  function soCreateRow(){
+    soRowCounter++;
+    const tr = document.createElement('tr');
+    tr.dataset.rowId = soRowCounter;
+    tr.innerHTML = `
+      <td class="so-sno" style="text-align:center;"></td>
+      <td><input type="text" class="so-partno" placeholder="Part No"></td>
+      <td><input type="text" class="so-hsn" placeholder="HSN Code"></td>
+      <td><textarea class="so-desc" rows="1" placeholder="Part description"></textarea></td>
+      <td><input type="number" class="so-qty" value="1" step="0.01"></td>
+      <td><input type="number" class="so-gst" value="18" step="0.01"></td>
+      <td class="so-gstamt">Rs. 0.00</td>
+      <td><input type="number" class="so-rate" value="0" step="0.01"></td>
+      <td class="so-amount">Rs. 0.00</td>
+      <td><button type="button" class="q-remove-btn" title="Remove row">×</button></td>
+    `;
+    tr.querySelectorAll('input').forEach(inp => inp.addEventListener('input', soRecalculate));
+    tr.querySelector('.q-remove-btn').addEventListener('click', () => { tr.remove(); soRenumberRows(); soRecalculate(); });
+    soItemsBody.appendChild(tr);
+    soRenumberRows();
+  }
+
+  function soRenumberRows(){
+    Array.from(soItemsBody.querySelectorAll('tr')).forEach((tr, idx) => {
+      tr.querySelector('.so-sno').textContent = idx + 1;
+    });
+  }
+
+  soAddRowBtn.addEventListener('click', soCreateRow);
+  soCreateRow(); // start with one row
+
+  function soGetItems(){
+    return Array.from(soItemsBody.querySelectorAll('tr')).map(tr => {
+      const qty = parseFloat(tr.querySelector('.so-qty').value) || 0;
+      const rate = parseFloat(tr.querySelector('.so-rate').value) || 0;
+      const gstPct = parseFloat(tr.querySelector('.so-gst').value) || 0;
+      const amount = qty * rate;
+      return {
+        partNo: tr.querySelector('.so-partno').value.trim(),
+        description: tr.querySelector('.so-desc').value.trim(),
+        hsn: tr.querySelector('.so-hsn').value.trim(),
+        qty,
+        rate, gstPct,
+        gstAmt: amount * gstPct / 100,
+        amount
+      };
+    });
+  }
+
+  function soRecalculate(){
+    const items = soGetItems();
+    const subTotal = items.reduce((s, i) => s + i.amount, 0);
+    const gstTotal = items.reduce((s, i) => s + i.gstAmt, 0);
+    const grandTotal = subTotal + gstTotal;
+
+    Array.from(soItemsBody.querySelectorAll('tr')).forEach((tr, idx) => {
+      tr.querySelector('.so-amount').textContent = qFormatCurrency(items[idx].amount);
+      tr.querySelector('.so-gstamt').textContent = qFormatCurrency(items[idx].gstAmt);
+    });
+
+    document.getElementById('soSubTotal').textContent = qFormatCurrency(subTotal);
+    document.getElementById('soGstTotal').textContent = qFormatCurrency(gstTotal);
+    document.getElementById('soGrandTotal').textContent = qFormatCurrency(grandTotal);
+    document.getElementById('soAmountWords').textContent = qNumberToWords(grandTotal);
+
+    return { items, subTotal, gstTotal, grandTotal };
+  }
+  soRecalculate();
+
+  function soGetHeaderData(){
+    return {
+      number: document.getElementById('soNumber').value.trim() || 'GHOUSE-SO-001',
+      date: document.getElementById('soDate').value,
+      reference: document.getElementById('soReference').value.trim(),
+      distributorName: document.getElementById('soDistributorName').value.trim(),
+      distributorCode: document.getElementById('soDistributorCode').value.trim(),
+      toName: document.getElementById('soToName').value.trim(),
+      attn: document.getElementById('soAttn').value.trim(),
+      address: document.getElementById('soAddress').value.trim()
+    };
+  }
+
+  const soMsg = document.getElementById('soMsg');
+  function showSoMsg(text, type){
+    soMsg.textContent = text;
+    soMsg.className = 'admin-msg show ' + type;
+  }
+
+  function soBuildDocHtml(header, calc){
+    const { items, subTotal, gstTotal, grandTotal } = calc;
+    const itemRows = items.map((it, idx) => `
+      <tr>
+        <td style="padding:6px;border:1px solid #ccc;text-align:center;">${idx + 1}</td>
+        <td style="padding:6px;border:1px solid #ccc;">${it.partNo || '—'}</td>
+        <td style="padding:6px;border:1px solid #ccc;text-align:center;">${it.hsn || '—'}</td>
+        <td style="padding:6px;border:1px solid #ccc;">${it.description || '—'}</td>
+        <td style="padding:6px;border:1px solid #ccc;text-align:center;">${it.qty}</td>
+        <td style="padding:6px;border:1px solid #ccc;text-align:center;">${it.gstPct}%</td>
+        <td style="padding:6px;border:1px solid #ccc;text-align:right;">${qFormatNumber(it.gstAmt)}</td>
+        <td style="padding:6px;border:1px solid #ccc;text-align:right;">${qFormatNumber(it.rate)}</td>
+        <td style="padding:6px;border:1px solid #ccc;text-align:right;">${qFormatNumber(it.amount)}</td>
+      </tr>`).join('');
+
+    return `
+      <div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#111;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+        <table width="100%" style="border-collapse:collapse;"><tr>
+          <td style="vertical-align:top;">
+            <div style="font-family:'Agency FB','Arial Narrow',sans-serif;font-weight:700;font-size:32px;letter-spacing:4px;color:#F79646;line-height:1;">GHOUSE</div>
+            <div style="font-weight:800;font-size:13px;letter-spacing:0.5px;margin-top:4px;color:#4F81BD;">BUS AIRCONDITIONING WORKS</div>
+            <div style="font-size:11.5px;margin-top:6px;display:flex;gap:5px;align-items:flex-start;">
+              <img src="${PIN_ICON_DATA_URI}" width="12" height="12" style="margin-top:2px;flex-shrink:0;" alt="">
+              <span>Plot No. 169, N.G.O. Colony, Near Industrial Area,<br>Mydukur Road, Proddatur, AP - 516360</span>
+            </div>
+            <div style="font-size:11.5px;font-weight:700;margin-top:5px;">GSTIN: ${GHOUSE_GSTIN}</div>
+          </td>
+          <td style="vertical-align:top;text-align:right;width:190px;">
+            <img src="${EBERS_LOGO_DATA_URI}" width="130" height="42" style="height:34px;width:auto;max-width:130px;" alt="Eberspächer">
+            <div style="font-size:11px;font-weight:700;color:#0068B7;letter-spacing:0.5px;margin-top:4px;">AUTHORISED DEALER</div>
+            <div style="font-size:12px;display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:10px;">
+              +91 9052155055
+              <img src="${WHATSAPP_ICON_DATA_URI}" width="14" height="14" alt="">
+            </div>
+            <div style="font-size:12px;display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:5px;">
+              ghousebasha55055@gmail.com
+              <img src="${GMAIL_ICON_DATA_URI}" width="15" height="15" alt="">
+            </div>
+          </td>
+        </tr></table>
+
+        <hr style="border:none;border-top:2px solid #111;margin:14px 0;">
+
+        <div style="font-size:20px;font-weight:800;margin-bottom:6px;">SUPPLY ORDER</div>
+        <div style="font-size:12.5px;line-height:1.7;margin-bottom:14px;">
+          <div><b>Order No:</b> ${header.number}</div>
+          <div><b>Date:</b> ${header.date ? new Date(header.date).toLocaleDateString('en-IN') : ''}</div>
+          ${header.reference ? '<div><b>Ref:</b> ' + header.reference + '</div>' : ''}
+        </div>
+
+        <div style="font-size:12.5px;margin-bottom:14px;padding:10px 12px;background:#FBF8F2;border:1px solid #DFD6C4;">
+          <div><b>Distributor Name:</b> ${header.distributorName || '—'}</div>
+          <div><b>Distributor Code:</b> ${header.distributorCode || '—'}</div>
+        </div>
+
+        <div style="font-size:12.5px;margin-bottom:14px;">
+          <div style="font-weight:700;margin-bottom:3px;">To</div>
+          <div>${header.toName || '—'}</div>
+          ${header.attn ? '<div>Attn: ' + header.attn + '</div>' : ''}
+          <div>${(header.address || '').replace(/\n/g,'<br>')}</div>
+        </div>
+
+        <p style="font-size:12.5px;margin-bottom:14px;">We are pleased to place an order for supply material as mentioned below.</p>
+
+        <table width="100%" style="border-collapse:collapse;font-size:11px;margin-bottom:14px;">
+          <thead>
+            <tr style="background:#F79646;">
+              <th style="padding:6px;border:1px solid #ccc;color:#fff;">SNo</th>
+              <th style="padding:6px;border:1px solid #ccc;color:#fff;text-align:left;">Part No</th>
+              <th style="padding:6px;border:1px solid #ccc;color:#fff;">HSN Code</th>
+              <th style="padding:6px;border:1px solid #ccc;color:#fff;text-align:left;">Part Description</th>
+              <th style="padding:6px;border:1px solid #ccc;color:#fff;">Qty</th>
+              <th style="padding:6px;border:1px solid #ccc;color:#fff;">GST%</th>
+              <th style="padding:6px;border:1px solid #ccc;color:#fff;">GST Amount</th>
+              <th style="padding:6px;border:1px solid #ccc;color:#fff;">Rate</th>
+              <th style="padding:6px;border:1px solid #ccc;color:#fff;">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemRows}
+          </tbody>
+        </table>
+
+        <table width="100%" style="border-collapse:collapse;margin-bottom:14px;"><tr>
+          <td></td>
+          <td style="width:230px;">
+            <div style="border:1.5px solid #111;padding:10px 14px;font-size:12.5px;">
+              <div style="display:flex;justify-content:space-between;"><span>Sub Total</span><span>${qFormatCurrency(subTotal)}</span></div>
+              <div style="display:flex;justify-content:space-between;"><span>GST Total</span><span>${qFormatCurrency(gstTotal)}</span></div>
+              <div style="display:flex;justify-content:space-between;font-weight:800;font-size:14px;border-top:1px solid #999;margin-top:6px;padding-top:6px;"><span>Total</span><span>${qFormatCurrency(grandTotal)}</span></div>
+            </div>
+          </td>
+        </tr></table>
+
+        <p style="font-style:italic;font-size:12px;border-top:1px dashed #ccc;padding-top:8px;margin-bottom:16px;">${qNumberToWords(grandTotal)}</p>
+
+        <div style="font-size:11px;color:#5B554D;text-align:center;border-top:1px solid #DFD6C4;padding-top:10px;">
+          This is an electronically generated document and does not require a signature or stamp.
+        </div>
+      </div>`;
+  }
+
+  /* ---------- Supply Order: Preview / Submit / Edit flow ---------- */
+  const soHeaderPanel = document.getElementById('soHeaderPanel');
+  const soLineItemsPanel = document.getElementById('soLineItemsPanel');
+  const soPreviewBtnRow = document.getElementById('soPreviewBtn').parentElement;
+  const soPreviewWrap = document.getElementById('soPreviewWrap');
+  const soPreviewDoc = document.getElementById('soPreviewDoc');
+  const soReviewActions = document.getElementById('soReviewActions');
+  const soFinalActions = document.getElementById('soFinalActions');
+  let soLastHeader = null;
+  let soLastCalc = null;
+
+  document.getElementById('soPreviewBtn').addEventListener('click', function(){
+    const header = soGetHeaderData();
+    const calc = soRecalculate();
+    soMsg.className = 'admin-msg';
+
+    if (!header.toName){
+      showSoMsg('Please enter the "To" recipient name before previewing.', 'err');
+      return;
+    }
+    if (calc.items.every(i => !i.description)){
+      showSoMsg('Add at least one line item with a description.', 'err');
+      return;
+    }
+
+    soLastHeader = header;
+    soLastCalc = calc;
+    soPreviewDoc.innerHTML = soBuildDocHtml(header, calc);
+
+    soHeaderPanel.style.display = 'none';
+    soLineItemsPanel.style.display = 'none';
+    soPreviewBtnRow.style.display = 'none';
+    soPreviewWrap.style.display = 'block';
+    soReviewActions.style.display = 'flex';
+    soFinalActions.style.display = 'none';
+    window.scrollTo({ top: soPreviewWrap.offsetTop - 20, behavior: 'smooth' });
+  });
+
+  document.getElementById('soEditBtn').addEventListener('click', function(){
+    soHeaderPanel.style.display = 'block';
+    soLineItemsPanel.style.display = 'block';
+    soPreviewBtnRow.style.display = 'flex';
+    soPreviewWrap.style.display = 'none';
+    soMsg.className = 'admin-msg';
+  });
+
+  document.getElementById('soSubmitBtn').addEventListener('click', function(){
+    soReviewActions.style.display = 'none';
+    soFinalActions.style.display = 'flex';
+    showSoMsg('Supply Order finalized. Print below.', 'ok');
+  });
+
+  document.getElementById('soPrintBtn').addEventListener('click', function(){
+    if (!soLastHeader) return;
+    const quotePrintArea = document.getElementById('quotePrintArea');
+    quotePrintArea.innerHTML = soBuildDocHtml(soLastHeader, soLastCalc);
     document.getElementById('dynamicPageStyle').textContent = '@page{size:portrait;margin:15mm;}';
     quotePrintArea.style.display = 'block';
     printElementThenHide(quotePrintArea, () => { document.getElementById('dynamicPageStyle').textContent = ''; });
