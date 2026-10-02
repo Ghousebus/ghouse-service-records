@@ -388,6 +388,24 @@
     border-bottom:1.5px solid var(--ink);padding:8px 10px;
   }
   .user-table td{padding:10px;border-bottom:1px dashed var(--rule);vertical-align:middle;}
+
+  /* Quote and Supply Order line-item columns stay fixed; long text wraps inside cells. */
+  #qItemsTable, #soItemsTable{table-layout:fixed;width:100%;}
+  #qItemsTable th:nth-child(1),#qItemsTable td:nth-child(1),#soItemsTable th:nth-child(1),#soItemsTable td:nth-child(1){width:4% !important;}
+  #qItemsTable th:nth-child(2),#qItemsTable td:nth-child(2),#soItemsTable th:nth-child(2),#soItemsTable td:nth-child(2){width:12% !important;}
+  #qItemsTable th:nth-child(3),#qItemsTable td:nth-child(3),#soItemsTable th:nth-child(3),#soItemsTable td:nth-child(3){width:22% !important;}
+  #qItemsTable th:nth-child(4),#qItemsTable td:nth-child(4),#soItemsTable th:nth-child(4),#soItemsTable td:nth-child(4){width:8% !important;}
+  #qItemsTable th:nth-child(5),#qItemsTable td:nth-child(5),#soItemsTable th:nth-child(5),#soItemsTable td:nth-child(5){width:5% !important;}
+  #qItemsTable th:nth-child(6),#qItemsTable td:nth-child(6),#soItemsTable th:nth-child(6),#soItemsTable td:nth-child(6){width:12% !important;}
+  #qItemsTable th:nth-child(7),#qItemsTable td:nth-child(7),#soItemsTable th:nth-child(7),#soItemsTable td:nth-child(7){width:6% !important;}
+  #qItemsTable th:nth-child(8),#qItemsTable td:nth-child(8),#soItemsTable th:nth-child(8),#soItemsTable td:nth-child(8){width:15% !important;}
+  #qItemsTable th:nth-child(9),#qItemsTable td:nth-child(9),#soItemsTable th:nth-child(9),#soItemsTable td:nth-child(9){width:13% !important;}
+  #qItemsTable th:nth-child(10),#qItemsTable td:nth-child(10),#soItemsTable th:nth-child(10),#soItemsTable td:nth-child(10){width:3% !important;}
+  #qItemsTable th,#soItemsTable th{padding:8px 4px;text-align:center;white-space:normal;overflow-wrap:anywhere;}
+  #qItemsTable td,#soItemsTable td{padding:6px 4px;overflow-wrap:anywhere;word-break:break-word;}
+  #qItemsTable .q-partno,#qItemsTable .q-desc,#soItemsTable .so-partno,#soItemsTable .so-desc{width:100%;min-width:0;max-width:100%;box-sizing:border-box;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;}
+  #qItemsTable .q-partno,#soItemsTable .so-partno{height:auto;min-height:38px;resize:vertical;}
+  #qItemsTable .q-desc,#soItemsTable .so-desc{min-height:38px;resize:vertical;}
   .role-pill{
     display:inline-block;padding:2px 9px;border-radius:20px;font-family:'Barlow Condensed',sans-serif;
     font-weight:700;font-size:11px;letter-spacing:.03em;text-transform:uppercase;
@@ -534,7 +552,7 @@
     word-wrap:break-word;overflow-wrap:break-word;white-space:normal;
   }
   .print-table th{
-    background:#EFEAE0;font-family:'Barlow Condensed',sans-serif;font-weight:700;
+    background:#F79646;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;
     text-transform:uppercase;letter-spacing:.02em;font-size:9.5px;
   }
   .print-table th:nth-child(1), .print-table td:nth-child(1){width:9%;white-space:nowrap;}
@@ -855,8 +873,8 @@
             <tr>
               <th style="width:5%;">SNo</th>
               <th style="width:12%;">Part Number</th>
-              <th style="width:23%;">Part Description</th>
-              <th style="width:10%;">HSN Code</th>
+              <th style="width:21%;">Part Description</th>
+              <th style="width:12%;">HSN Code</th>
               <th style="width:7%;">Qty</th>
               <th style="width:11%;">Rate</th>
               <th style="width:8%;">GST%</th>
@@ -1227,7 +1245,7 @@
   </div>
 
   <p class="footer">
-    Plot No. 169, N.G.O. Colony, Near Industrial Area, Mydukur Road, Proddatur – 516360, Y.S.R. Kadapa Dist., A.P.<br>
+    Plot No 169, NGO Colony,Near Industrial Area,<br>Mydukur Road, Proddatur -516360, YSR Dist, A.P.<br>
     ghousebasha55055@gmail.com · 9052155055
   </p>
 
@@ -1292,7 +1310,7 @@
 
     <div class="print-footer">
       <p class="print-doc-name">GHOUSE — Service Records Report</p>
-      Plot No. 169, N.G.O. Colony, Near Industrial Area, Mydukur Road, Proddatur – 516360, Y.S.R. Kadapa Dist., A.P.<br>
+      Plot No 169, NGO Colony,Near Industrial Area,<br>Mydukur Road, Proddatur -516360, YSR Dist, A.P.<br>
       ghousebasha55055@gmail.com &nbsp;·&nbsp; 9052155055
     </div>
    </div>
@@ -1766,7 +1784,7 @@
     tr.dataset.rowId = qRowCounter;
     tr.innerHTML = `
       <td class="q-sno" style="text-align:center;"></td>
-      <td><input type="text" class="q-partno" placeholder="Part Number"></td>
+      <td><textarea class="q-partno" rows="1" placeholder="Part Number"></textarea></td>
       <td><textarea class="q-desc" rows="1" placeholder="Part description"></textarea></td>
       <td><input type="text" class="q-hsn" placeholder="HSN Code"></td>
       <td><input type="number" class="q-qty" value="1" step="0.01"></td>
@@ -1894,8 +1912,8 @@
     const itemRows = items.map((it, idx) => `
       <tr>
         <td style="padding:6px;border:1px solid #ccc;text-align:center;">${idx + 1}</td>
-        <td style="padding:6px;border:1px solid #ccc;">${it.partNo || '—'}</td>
-        <td style="padding:6px;border:1px solid #ccc;">${it.description || '—'}</td>
+        <td style="padding:6px;border:1px solid #ccc;overflow-wrap:anywhere;word-break:break-word;white-space:normal;">${it.partNo || '—'}</td>
+        <td style="padding:6px;border:1px solid #ccc;overflow-wrap:anywhere;word-break:break-word;white-space:normal;">${it.description || '—'}</td>
         <td style="padding:6px;border:1px solid #ccc;text-align:center;">${it.hsn || '—'}</td>
         <td style="padding:6px;border:1px solid #ccc;text-align:center;">${it.qty}</td>
         <td style="padding:6px;border:1px solid #ccc;text-align:right;">${qFormatNumber(it.rate)}</td>
@@ -1912,7 +1930,7 @@
             <div style="font-weight:800;font-size:13px;letter-spacing:0.5px;margin-top:4px;color:#4F81BD;">BUS AIRCONDITIONING WORKS</div>
             <div style="font-size:11.5px;margin-top:6px;display:flex;gap:5px;align-items:flex-start;">
               <img src="${PIN_ICON_DATA_URI}" width="12" height="12" style="margin-top:2px;flex-shrink:0;" alt="">
-              <span>Plot No. 169, N.G.O. Colony, Near Industrial Area,<br>Mydukur Road, Proddatur, AP - 516360</span>
+              <span>Plot No 169, NGO Colony,Near Industrial Area,<br>Mydukur Road, Proddatur -516360, YSR Dist, A.P.</span>
             </div>
             <div style="font-size:11.5px;font-weight:700;margin-top:5px;">GSTIN: ${GHOUSE_GSTIN}</div>
           </td>
@@ -1951,7 +1969,10 @@
           </td>
         </tr></table>
 
-        <table width="100%" style="border-collapse:collapse;font-size:11px;margin-bottom:14px;">
+        <table width="100%" style="border-collapse:collapse;table-layout:fixed;width:100%;font-size:11px;margin-bottom:14px;">
+          <colgroup>
+            <col style="width:4%;"><col style="width:12%;"><col style="width:21%;"><col style="width:10%;"><col style="width:5%;"><col style="width:12%;"><col style="width:6%;"><col style="width:15%;"><col style="width:15%;">
+          </colgroup>
           <thead>
             <tr style="background:#F79646;">
               <th style="padding:6px;border:1px solid #ccc;color:#fff;">SNo</th>
@@ -2077,7 +2098,7 @@
     tr.dataset.rowId = soRowCounter;
     tr.innerHTML = `
       <td class="so-sno" style="text-align:center;"></td>
-      <td><input type="text" class="so-partno" placeholder="Part Number"></td>
+      <td><textarea class="so-partno" rows="1" placeholder="Part Number"></textarea></td>
       <td><textarea class="so-desc" rows="1" placeholder="Part description"></textarea></td>
       <td><input type="text" class="so-hsn" placeholder="HSN Code"></td>
       <td><input type="number" class="so-qty" value="1" step="0.01"></td>
@@ -2163,8 +2184,8 @@
     const itemRows = items.map((it, idx) => `
       <tr>
         <td style="padding:6px;border:1px solid #ccc;text-align:center;">${idx + 1}</td>
-        <td style="padding:6px;border:1px solid #ccc;">${it.partNo || '—'}</td>
-        <td style="padding:6px;border:1px solid #ccc;">${it.description || '—'}</td>
+        <td style="padding:6px;border:1px solid #ccc;overflow-wrap:anywhere;word-break:break-word;white-space:normal;">${it.partNo || '—'}</td>
+        <td style="padding:6px;border:1px solid #ccc;overflow-wrap:anywhere;word-break:break-word;white-space:normal;">${it.description || '—'}</td>
         <td style="padding:6px;border:1px solid #ccc;text-align:center;">${it.hsn || '—'}</td>
         <td style="padding:6px;border:1px solid #ccc;text-align:center;">${it.qty}</td>
         <td style="padding:6px;border:1px solid #ccc;text-align:right;">${qFormatNumber(it.rate)}</td>
@@ -2181,7 +2202,7 @@
             <div style="font-weight:800;font-size:13px;letter-spacing:0.5px;margin-top:4px;color:#4F81BD;">BUS AIRCONDITIONING WORKS</div>
             <div style="font-size:11.5px;margin-top:6px;display:flex;gap:5px;align-items:flex-start;">
               <img src="${PIN_ICON_DATA_URI}" width="12" height="12" style="margin-top:2px;flex-shrink:0;" alt="">
-              <span>Plot No. 169, N.G.O. Colony, Near Industrial Area,<br>Mydukur Road, Proddatur, AP - 516360</span>
+              <span>Plot No 169, NGO Colony,Near Industrial Area,<br>Mydukur Road, Proddatur -516360, YSR Dist, A.P.</span>
             </div>
             <div style="font-size:11.5px;font-weight:700;margin-top:5px;">GSTIN: ${GHOUSE_GSTIN}</div>
           </td>
@@ -2221,7 +2242,10 @@
 
         <p style="font-size:12.5px;margin-bottom:14px;">We are pleased to place an order for supply material as mentioned below.</p>
 
-        <table width="100%" style="border-collapse:collapse;font-size:11px;margin-bottom:14px;">
+        <table width="100%" style="border-collapse:collapse;table-layout:fixed;width:100%;font-size:11px;margin-bottom:14px;">
+          <colgroup>
+            <col style="width:4%;"><col style="width:12%;"><col style="width:21%;"><col style="width:10%;"><col style="width:5%;"><col style="width:12%;"><col style="width:6%;"><col style="width:15%;"><col style="width:15%;">
+          </colgroup>
           <thead>
             <tr style="background:#F79646;">
               <th style="padding:6px;border:1px solid #ccc;color:#fff;">SNo</th>
