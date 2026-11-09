@@ -589,6 +589,21 @@
   .q-qty, .q-gst{
     -moz-appearance:textfield;
   }
+
+  /* Eberspächer supply-order mode: blue outer background, white editing panels */
+  #quoteModeSupply{
+    background-color:#0068b7;
+    padding:16px;
+    border-radius:10px;
+    box-sizing:border-box;
+  }
+  #quoteModeSupply .admin-panel{
+    background:#FFFFFF;
+  }
+  @media(max-width:600px){
+    #quoteModeSupply{padding:10px;border-radius:8px;}
+  }
+
 </style>
 <style id="dynamicPageStyle"></style>
 </head>
@@ -820,7 +835,7 @@
         <label for="quoteDocTypeSelect">Document Type</label>
         <select class="role-select" id="quoteDocTypeSelect">
           <option value="quote">Quote</option>
-          <option value="supply">Supply Order</option>
+          <option value="supply">Supply Order - Eberspacher</option>
         </select>
       </div>
 
