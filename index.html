@@ -1793,6 +1793,84 @@
   const qAddRowBtn = document.getElementById('qAddRowBtn');
   let qRowCounter = 0;
 
+  // Search the existing Stock collection from either Part Number or Description.
+  // Choosing a result fills the three requested catalogue fields; commercial
+  // values (quantity, rate and GST) remain editable and are not overwritten.
+  let stockPickerRequest = 0;
+  function stockFieldValue(item, keys){
+    for (const key of keys){
+      const value = item && item[key];
+      if (value !== undefined && value !== null && String(value).trim() !== '') return String(value);
+    }
+    return '';
+  }
+  function attachStockPicker(row, prefix){
+    const partField = row.querySelector('.' + prefix + '-partno');
+    const descField = row.querySelector('.' + prefix + '-desc');
+    const partCell = partField.parentElement;
+    const descCell = descField.parentElement;
+    [partCell, descCell].forEach(cell => { cell.style.position = 'relative'; });
+    const menu = document.createElement('div');
+    menu.className = 'line-stock-picker';
+    menu.style.cssText = 'display:none;position:absolute;left:0;right:0;top:100%;z-index:1000;max-height:220px;overflow:auto;background:#fff;border:1px solid #b8c7d6;border-radius:6px;box-shadow:0 5px 16px rgba(0,0,0,.16);min-width:240px;text-align:left;';
+    partCell.appendChild(menu);
+    let timer = null;
+    let requestId = 0;
+    const hide = () => { menu.style.display = 'none'; };
+    const choose = item => {
+      partField.value = stockFieldValue(item, ['Part No','Part Number','PartNo','partNo']);
+      descField.value = stockFieldValue(item, ['Description','Part Description','PartDescription','description']);
+      const hsn = stockFieldValue(item, ['HSN Code','HSN','HSNCode','Hsn Code','hsnCode','hsn']);
+      row.querySelector('.' + prefix + '-hsn').value = hsn;
+      hide();
+      if (prefix === 'q') qRecalculate(); else soRecalculate();
+    };
+    const search = async source => {
+      const q = source.value.trim();
+      if (q.length < 2){ hide(); return; }
+      const thisRequest = ++requestId;
+      try {
+        const stockSearch = functions.httpsCallable('stockSearch');
+        const result = await stockSearch({q});
+        if (thisRequest !== requestId) return;
+        const data = result.data || {};
+        const items = data.success && Array.isArray(data.items) ? data.items : [];
+        menu.innerHTML = '';
+        if (!items.length){ hide(); return; }
+        items.slice(0,12).forEach(item => {
+          const part = stockFieldValue(item, ['Part No','Part Number','PartNo','partNo']);
+          const desc = stockFieldValue(item, ['Description','Part Description','PartDescription','description']);
+          const hsn = stockFieldValue(item, ['HSN Code','HSN','HSNCode','Hsn Code','hsnCode','hsn']);
+          const option = document.createElement('button');
+          option.type = 'button';
+          option.style.cssText = 'display:block;width:100%;padding:9px 11px;border:0;border-bottom:1px solid #edf1f5;background:#fff;color:#172b3a;text-align:left;cursor:pointer;font-size:12px;';
+          const strong = document.createElement('strong'); strong.textContent = part || 'Part';
+          const detail = document.createElement('span'); detail.textContent = ' — ' + (desc || '');
+          const meta = document.createElement('small'); meta.style.cssText = 'display:block;color:#64748b;margin-top:3px;'; meta.textContent = hsn ? 'HSN: ' + hsn : 'Select to fill part details';
+          option.append(strong, detail, meta);
+          option.addEventListener('mouseenter', () => option.style.background = '#f1f7fc');
+          option.addEventListener('mouseleave', () => option.style.background = '#fff');
+          option.addEventListener('mousedown', e => { e.preventDefault(); choose(item); });
+          menu.appendChild(option);
+        });
+        menu.style.display = 'block';
+      } catch (err) {
+        console.warn('Line item stock lookup failed:', err);
+        hide();
+      }
+    };
+    [partField, descField].forEach(field => {
+      field.setAttribute('autocomplete','off');
+      field.addEventListener('input', () => {
+        clearTimeout(timer);
+        timer = setTimeout(() => search(field), 280);
+      });
+      field.addEventListener('focus', () => { if (field.value.trim().length >= 2) search(field); });
+      field.addEventListener('keydown', e => { if (e.key === 'Escape') hide(); });
+    });
+    document.addEventListener('click', e => { if (!row.contains(e.target)) hide(); });
+  }
+
   function qCreateRow(){
     qRowCounter++;
     const tr = document.createElement('tr');
@@ -1812,6 +1890,7 @@
     tr.querySelectorAll('input').forEach(inp => inp.addEventListener('input', qRecalculate));
     tr.querySelector('.q-remove-btn').addEventListener('click', () => { tr.remove(); qRenumberRows(); qRecalculate(); });
     qItemsBody.appendChild(tr);
+    attachStockPicker(tr, 'q');
     qRenumberRows();
   }
 
@@ -2106,6 +2185,18 @@
   /* ---------- Supply Order: same pattern as Quote, with its own fields/doc layout ---------- */
   document.getElementById('soDate').valueAsDate = new Date();
 
+  // Editable default recipient details for Eberspächer Supply Orders.
+  const soDefaults = {
+    soDistributorCode: '8850054-01',
+    soAttn: 'Mr. Abdul',
+    soToName: 'M/S Ebespaecher Sutrak Bus Climate Control System India Pvt Ltd.',
+    soAddress: '25/1,Devalapura Village,Anugondanahalli Hobli,\nHoskote Taluka, Bangalore Rural - 560067,\nKarnataka, India\nTel: +91 080-22689908 FAX: 2689918'
+  };
+  Object.entries(soDefaults).forEach(([id, value]) => {
+    const field = document.getElementById(id);
+    if (field && !field.value.trim()) field.value = value;
+  });
+
   const soItemsBody = document.getElementById('soItemsBody');
   const soAddRowBtn = document.getElementById('soAddRowBtn');
   let soRowCounter = 0;
@@ -2129,6 +2220,7 @@
     tr.querySelectorAll('input').forEach(inp => inp.addEventListener('input', soRecalculate));
     tr.querySelector('.q-remove-btn').addEventListener('click', () => { tr.remove(); soRenumberRows(); soRecalculate(); });
     soItemsBody.appendChild(tr);
+    attachStockPicker(tr, 'so');
     soRenumberRows();
   }
 
