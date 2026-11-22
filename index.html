@@ -864,7 +864,7 @@
         <div class="row2">
           <div class="field">
             <label for="qNumber">Quote Number</label>
-            <input type="text" id="qNumber" placeholder="e.g. GHOUSE-EST-001">
+            <input type="text" id="qNumber" placeholder="e.g. GHOUSE-EST-001" required>
           </div>
           <div class="field">
             <label for="qDate">Quote Date</label>
@@ -958,7 +958,7 @@
           <div class="row2">
             <div class="field">
               <label for="soNumber">Order Number</label>
-              <input type="text" id="soNumber" placeholder="e.g. GHOUSE-SO-001">
+              <input type="text" id="soNumber" placeholder="e.g. GHOUSE-SO-001" required>
             </div>
             <div class="field">
               <label for="soDate">Order Date</label>
@@ -1090,7 +1090,7 @@
             <table class="user-table stock-table" id="stockResultsTable">
               <thead>
                 <tr>
-                  <th>SN</th><th>Part No</th><th>Description</th><th>Brand</th><th>Category</th>
+                  <th>SN</th><th>Part No</th><th>Description</th><th>HSN Code</th>
                   <th>Unit Price</th><th>Total Stock</th><th>Total Stock Price</th><th>Used Stock</th><th>Balance Stock</th><th>Balance Stock Price</th>
                 </tr>
               </thead>
@@ -1218,12 +1218,8 @@
             </div>
             <div class="row2">
               <div class="field">
-                <label for="stockNewBrand">Brand</label>
-                <input type="text" id="stockNewBrand">
-              </div>
-              <div class="field">
-                <label for="stockNewCategory">Category</label>
-                <input type="text" id="stockNewCategory">
+                <label for="stockNewHsn">HSN Code</label>
+                <input type="text" id="stockNewHsn">
               </div>
             </div>
             <div class="row2">
@@ -1803,7 +1799,8 @@
   const GHOUSE_TERMS = [
     'Additional Materials: Any materials used during the course of work, other than those specified in the quotation or agreement, shall be charged separately at actual cost.',
     'Gas Usage for AC Units: For refilling AC units, it is mandatory to use a full 10 kg cylinder. The use of small tins (400 gms) is strongly discouraged and not recommended.',
-    'Warranty Limitation: If small tins (400 gms) are used for gas refilling, the warranty of three (3) months on the compressor shall not be applicable.'
+    'Warranty Limitation: If small tins (400 gms) are used for gas refilling, the warranty of three (3) months on the compressor shall not be applicable.',
+    'Transportation/Shipping cost to be beared by the receiver if any.'
   ];
 
   document.getElementById('qDate').valueAsDate = new Date();
@@ -2004,7 +2001,7 @@
 
   function qGetHeaderData(){
     return {
-      number: document.getElementById('qNumber').value.trim() || 'GHOUSE-EST-001',
+      number: document.getElementById('qNumber').value.trim(),
       date: document.getElementById('qDate').value,
       reference: document.getElementById('qReference').value.trim(),
       billName: document.getElementById('qBillName').value.trim(),
@@ -2145,6 +2142,11 @@
     const calc = qRecalculate();
     qMsg.className = 'admin-msg';
 
+    if (!header.number){
+      showQMsg('Please enter the Quote Number before previewing.', 'err');
+      document.getElementById('qNumber').focus();
+      return;
+    }
     if (!header.billName){
       showQMsg('Please enter the Bill To name before previewing.', 'err');
       return;
@@ -2292,7 +2294,7 @@
 
   function soGetHeaderData(){
     return {
-      number: document.getElementById('soNumber').value.trim() || 'GHOUSE-SO-001',
+      number: document.getElementById('soNumber').value.trim(),
       date: document.getElementById('soDate').value,
       reference: document.getElementById('soReference').value.trim(),
       distributorCode: document.getElementById('soDistributorCode').value.trim(),
@@ -2428,6 +2430,11 @@
     const calc = soRecalculate();
     soMsg.className = 'admin-msg';
 
+    if (!header.number){
+      showSoMsg('Please enter the Order Number before previewing.', 'err');
+      document.getElementById('soNumber').focus();
+      return;
+    }
     if (!header.toName){
       showSoMsg('Please enter the "To" recipient name before previewing.', 'err');
       return;
@@ -2535,7 +2542,7 @@
   function stockTotalsRowHtml(totals){
     return `
       <tr class="stock-total-row">
-        <td colspan="6" style="text-align:right;">TOTAL</td>
+        <td colspan="5" style="text-align:right;">TOTAL</td>
         <td style="text-align:right;">${stockFormatNumber(totals.totalStock)}</td>
         <td style="text-align:right;">${stockFormatCurrency(totals.totalStockPrice)}</td>
         <td style="text-align:right;">${stockFormatNumber(totals.usedStock)}</td>
@@ -2546,7 +2553,7 @@
 
   function renderStockResults(items, totals){
     if (items.length === 0){
-      stockResultsBody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:20px;color:var(--ink-soft);">No parts found.</td></tr>';
+      stockResultsBody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--ink-soft);">No parts found.</td></tr>';
       return;
     }
     const itemRows = items.map(it => `
@@ -2554,8 +2561,7 @@
         <td>${it['SN'] || ''}</td>
         <td>${it['Part No'] || '—'}</td>
         <td><span class="stock-desc-text">${it['Description'] || ''}</span></td>
-        <td>${it['Brand'] || '—'}</td>
-        <td>${it['Category'] || '—'}</td>
+        <td>${stockFieldValue(it, ['HSN Code','HSN','HSNCode','Hsn Code','hsnCode','hsn']) || '—'}</td>
         <td>${stockFormatCurrency(it['Unit Price'])}</td>
         <td>${stockFormatNumber(it['Total Stock'])}</td>
         <td>${stockFormatCurrency(it['Total Stock Price'])}</td>
@@ -2575,7 +2581,7 @@
     stockSearchBtn.textContent = 'Searching...';
     stockStatusLine.style.display = 'block';
     stockStatusLine.textContent = 'Loading stock...';
-    stockResultsBody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:20px;">Loading…</td></tr>';
+    stockResultsBody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:20px;">Loading…</td></tr>';
 
     try {
       const stockSearch = functions.httpsCallable('stockSearch');
@@ -2589,14 +2595,14 @@
       } else {
         currentStockItems = [];
         stockStatusLine.textContent = 'Search failed';
-        stockResultsBody.innerHTML = `<tr><td colspan="11" style="text-align:center;padding:20px;">${data.message || 'Something went wrong.'}</td></tr>`;
+        stockResultsBody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:20px;">${data.message || 'Something went wrong.'}</td></tr>`;
       }
     } catch (err) {
       currentStockItems = [];
       console.error('stockSearch error:', err);
       const detail = (err && (err.message || err.code)) ? `${err.code || ''} ${err.message || ''}`.trim() : 'Unknown error';
       stockStatusLine.textContent = 'Error: ' + detail;
-      stockResultsBody.innerHTML = `<tr><td colspan="11" style="text-align:center;padding:20px;">Could not load stock — ${detail}</td></tr>`;
+      stockResultsBody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:20px;">Could not load stock — ${detail}</td></tr>`;
     } finally {
       stockSearchBtn.disabled = false;
       stockSearchBtn.textContent = 'Search';
@@ -2607,13 +2613,13 @@
 
   stockExportBtn.addEventListener('click', function(){
     if (currentStockItems.length === 0){ alert('No stock data to export. Run a search first.'); return; }
-    const headers = ['SN','Part No','Description','Brand','Category','Unit Price','Total Stock','Total Stock Price','Used Stock','Balance Stock','Balance Stock Price'];
-    const rows = currentStockItems.map(it => headers.map(h => it[h] !== undefined ? it[h] : ''));
+    const headers = ['SN','Part No','Description','HSN Code','Unit Price','Total Stock','Total Stock Price','Used Stock','Balance Stock','Balance Stock Price'];
+    const rows = currentStockItems.map(it => headers.map(h => h === 'HSN Code' ? stockFieldValue(it, ['HSN Code','HSN','HSNCode','Hsn Code','hsnCode','hsn']) : (it[h] !== undefined ? it[h] : '')));
     if (currentStockTotals){
-      rows.push(['','','TOTAL','','','',currentStockTotals.totalStock,currentStockTotals.totalStockPrice,currentStockTotals.usedStock,currentStockTotals.balanceStock,currentStockTotals.balanceStockPrice]);
+      rows.push(['','','TOTAL','','',currentStockTotals.totalStock,currentStockTotals.totalStockPrice,currentStockTotals.usedStock,currentStockTotals.balanceStock,currentStockTotals.balanceStockPrice]);
     }
     const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-    ws['!cols'] = [{wch:5},{wch:14},{wch:40},{wch:12},{wch:12},{wch:12},{wch:12},{wch:14},{wch:10},{wch:10},{wch:14}];
+    ws['!cols'] = [{wch:5},{wch:14},{wch:40},{wch:14},{wch:12},{wch:12},{wch:14},{wch:10},{wch:10},{wch:14}];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Stock');
     const stamp = new Date().toISOString().slice(0,10);
@@ -2628,8 +2634,7 @@
         <td>${it['SN'] || ''}</td>
         <td>${it['Part No'] || ''}</td>
         <td>${it['Description'] || ''}</td>
-        <td>${it['Brand'] || ''}</td>
-        <td>${it['Category'] || ''}</td>
+        <td>${stockFieldValue(it, ['HSN Code','HSN','HSNCode','Hsn Code','hsnCode','hsn'])}</td>
         <td>${stockFormatCurrency(it['Unit Price'])}</td>
         <td>${stockFormatNumber(it['Total Stock'])}</td>
         <td>${stockFormatCurrency(it['Total Stock Price'])}</td>
@@ -2639,7 +2644,7 @@
       </tr>`).join('');
     const totalsRow = currentStockTotals ? `
       <tr class="stock-total-row">
-        <td colspan="6" style="text-align:right;">TOTAL</td>
+        <td colspan="5" style="text-align:right;">TOTAL</td>
         <td style="text-align:right;">${stockFormatNumber(currentStockTotals.totalStock)}</td>
         <td style="text-align:right;">${stockFormatCurrency(currentStockTotals.totalStockPrice)}</td>
         <td style="text-align:right;">${stockFormatNumber(currentStockTotals.usedStock)}</td>
@@ -2655,7 +2660,7 @@
         </div>
         <table class="stock-print-table">
           <thead><tr>
-            <th>SN</th><th>Part No</th><th>Description</th><th>Brand</th><th>Category</th>
+            <th>SN</th><th>Part No</th><th>Description</th><th>HSN Code</th>
             <th>Unit Price</th><th>Total Stock</th><th>Total Stock Price</th><th>Used Stock</th><th>Balance Stock</th><th>Balance Stock Price</th>
           </tr></thead>
           <tbody>${rows}${totalsRow}</tbody>
@@ -2994,13 +2999,12 @@
       const result = await stockInNew({
         partNo: document.getElementById('stockNewPartNo').value.trim(),
         description, unitPrice, qty,
-        brand: document.getElementById('stockNewBrand').value.trim(),
-        category: document.getElementById('stockNewCategory').value.trim()
+        hsnCode: document.getElementById('stockNewHsn').value.trim()
       });
       if (result.data.success){
         msgEl.textContent = 'New part added to stock.';
         msgEl.className = 'admin-msg show ok';
-        ['stockNewPartNo','stockNewDescription','stockNewBrand','stockNewCategory','stockNewPrice','stockNewQty'].forEach(id => document.getElementById(id).value = '');
+        ['stockNewPartNo','stockNewDescription','stockNewHsn','stockNewPrice','stockNewQty'].forEach(id => document.getElementById(id).value = '');
       } else {
         msgEl.textContent = result.data.message || 'Could not add part.';
         msgEl.className = 'admin-msg show err';
