@@ -457,21 +457,20 @@
     border:1px solid var(--ink);font-weight:700;color:#111;
     background:var(--cream);
   }
-  /* View Stock: keep the complete 11-column table inside the viewport. */
+  /* View Stock: compact quantity columns and give currency columns room. */
   #stockResultsTable{width:100%;table-layout:fixed;}
   #stockResultsTable th{padding:10px 4px;font-size:10.5px;text-align:center !important;}
   #stockResultsTable td{padding:9px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;overflow-wrap:normal;}
   #stockResultsTable th:nth-child(1),#stockResultsTable td:nth-child(1){width:3%;}
   #stockResultsTable th:nth-child(2),#stockResultsTable td:nth-child(2){width:11%;}
-  #stockResultsTable th:nth-child(3),#stockResultsTable td:nth-child(3){width:26%;}
+  #stockResultsTable th:nth-child(3),#stockResultsTable td:nth-child(3){width:24%;}
   #stockResultsTable th:nth-child(4),#stockResultsTable td:nth-child(4){width:5%;}
   #stockResultsTable th:nth-child(5),#stockResultsTable td:nth-child(5){width:6%;}
-  #stockResultsTable th:nth-child(6),#stockResultsTable td:nth-child(6){width:8%;}
-  #stockResultsTable th:nth-child(7),#stockResultsTable td:nth-child(7){width:5%;}
-  #stockResultsTable th:nth-child(8),#stockResultsTable td:nth-child(8){width:11%;}
+  #stockResultsTable th:nth-child(6),#stockResultsTable td:nth-child(6){width:5%;}
+  #stockResultsTable th:nth-child(7),#stockResultsTable td:nth-child(7){width:12%;}
+  #stockResultsTable th:nth-child(8),#stockResultsTable td:nth-child(8){width:7%;}
   #stockResultsTable th:nth-child(9),#stockResultsTable td:nth-child(9){width:5%;}
-  #stockResultsTable th:nth-child(10),#stockResultsTable td:nth-child(10){width:6%;}
-  #stockResultsTable th:nth-child(11),#stockResultsTable td:nth-child(11){width:14%;}
+  #stockResultsTable th:nth-child(10),#stockResultsTable td:nth-child(10){width:22%;}
   #stockResultsTable td:nth-child(3){white-space:normal;text-overflow:clip;}
   #stockResultsTable .stock-desc-text{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;line-height:1.25;max-height:2.5em;overflow-wrap:anywhere;}
   #stockResultsTable td.balance-stock-zero{background:rgba(239,91,63,.20);color:#8f2416;font-weight:700;}
