@@ -2022,8 +2022,8 @@
     const itemRows = items.map((it, idx) => `
       <tr>
         <td style="padding:6px;border:1px solid #ccc;text-align:center;">${idx + 1}</td>
-        <td style="padding:6px;border:1px solid #ccc;overflow-wrap:anywhere;word-break:break-word;white-space:normal;">${it.partNo || '—'}</td>
-        <td style="padding:6px;border:1px solid #ccc;overflow-wrap:anywhere;word-break:break-word;white-space:normal;">${it.description || '—'}</td>
+        <td class="doc-part-number" style="padding:6px;border:1px solid #ccc;text-align:left;white-space:nowrap;word-break:normal;overflow-wrap:normal;">${it.partNo || '—'}</td>
+        <td class="doc-part-description" style="padding:6px;border:1px solid #ccc;white-space:normal;overflow-wrap:anywhere;word-break:break-word;">${it.description || '—'}</td>
         <td style="padding:6px;border:1px solid #ccc;text-align:center;">${it.hsn || '—'}</td>
         <td style="padding:6px;border:1px solid #ccc;text-align:center;">${it.qty}</td>
         <td style="padding:6px;border:1px solid #ccc;text-align:right;">${qFormatNumber(it.rate)}</td>
@@ -2081,19 +2081,19 @@
 
         <table width="100%" style="border-collapse:collapse;table-layout:fixed;width:100%;font-size:11px;margin-bottom:14px;">
           <colgroup>
-            <col style="width:4%;"><col style="width:12%;"><col style="width:21%;"><col style="width:10%;"><col style="width:5%;"><col style="width:12%;"><col style="width:6%;"><col style="width:15%;"><col style="width:15%;">
+            <col style="width:4%;"><col style="width:18%;"><col style="width:20%;"><col style="width:10%;"><col style="width:5%;"><col style="width:10%;"><col style="width:6%;"><col style="width:13%;"><col style="width:14%;">
           </colgroup>
           <thead>
             <tr style="background:#F79646;">
-              <th style="padding:6px;border:1px solid #ccc;color:#fff;">SNo</th>
-              <th style="padding:6px;border:1px solid #ccc;color:#fff;text-align:left;">Part Number</th>
-              <th style="padding:6px;border:1px solid #ccc;color:#fff;text-align:left;">Part Description</th>
-              <th style="padding:6px;border:1px solid #ccc;color:#fff;">HSN Code</th>
-              <th style="padding:6px;border:1px solid #ccc;color:#fff;">Qty</th>
-              <th style="padding:6px;border:1px solid #ccc;color:#fff;">Rate</th>
-              <th style="padding:6px;border:1px solid #ccc;color:#fff;">GST%</th>
-              <th style="padding:6px;border:1px solid #ccc;color:#fff;">GST Amount</th>
-              <th style="padding:6px;border:1px solid #ccc;color:#fff;">Amount</th>
+              <th style="padding:6px;border:1px solid #ccc;color:#fff;text-align:center;vertical-align:middle;white-space:nowrap;">SNo</th>
+              <th style="padding:6px;border:1px solid #ccc;color:#fff;text-align:center;vertical-align:middle;">Part Number</th>
+              <th style="padding:6px;border:1px solid #ccc;color:#fff;text-align:center;vertical-align:middle;">Part Description</th>
+              <th style="padding:6px;border:1px solid #ccc;color:#fff;text-align:center;vertical-align:middle;white-space:nowrap;">HSN Code</th>
+              <th style="padding:6px;border:1px solid #ccc;color:#fff;text-align:center;vertical-align:middle;white-space:nowrap;">Qty</th>
+              <th style="padding:6px;border:1px solid #ccc;color:#fff;text-align:center;vertical-align:middle;white-space:nowrap;">Rate</th>
+              <th style="padding:6px;border:1px solid #ccc;color:#fff;text-align:center;vertical-align:middle;white-space:nowrap;">GST%</th>
+              <th style="padding:6px;border:1px solid #ccc;color:#fff;text-align:center;vertical-align:middle;white-space:nowrap;">GST Amount</th>
+              <th style="padding:6px;border:1px solid #ccc;color:#fff;text-align:center;vertical-align:middle;white-space:nowrap;">Amount</th>
             </tr>
           </thead>
           <tbody>
@@ -2315,8 +2315,8 @@
     const itemRows = items.map((it, idx) => `
       <tr>
         <td style="padding:6px;border:1px solid #ccc;text-align:center;">${idx + 1}</td>
-        <td style="padding:6px;border:1px solid #ccc;overflow-wrap:anywhere;word-break:break-word;white-space:normal;">${it.partNo || '—'}</td>
-        <td style="padding:6px;border:1px solid #ccc;overflow-wrap:anywhere;word-break:break-word;white-space:normal;">${it.description || '—'}</td>
+        <td class="doc-part-number" style="padding:6px;border:1px solid #ccc;text-align:left;white-space:nowrap;word-break:normal;overflow-wrap:normal;">${it.partNo || '—'}</td>
+        <td class="doc-part-description" style="padding:6px;border:1px solid #ccc;white-space:normal;overflow-wrap:anywhere;word-break:break-word;">${it.description || '—'}</td>
         <td style="padding:6px;border:1px solid #ccc;text-align:center;">${it.hsn || '—'}</td>
         <td style="padding:6px;border:1px solid #ccc;text-align:center;">${it.qty}</td>
         <td style="padding:6px;border:1px solid #ccc;text-align:right;">${qFormatNumber(it.rate)}</td>
@@ -2375,19 +2375,19 @@
 
         <table width="100%" style="border-collapse:collapse;table-layout:fixed;width:100%;font-size:11px;margin-bottom:14px;">
           <colgroup>
-            <col style="width:4%;"><col style="width:12%;"><col style="width:21%;"><col style="width:10%;"><col style="width:5%;"><col style="width:12%;"><col style="width:6%;"><col style="width:15%;"><col style="width:15%;">
+            <col style="width:4%;"><col style="width:18%;"><col style="width:20%;"><col style="width:10%;"><col style="width:5%;"><col style="width:10%;"><col style="width:6%;"><col style="width:13%;"><col style="width:14%;">
           </colgroup>
           <thead>
             <tr style="background:#F79646;">
-              <th style="padding:6px;border:1px solid #ccc;color:#fff;">SNo</th>
-              <th style="padding:6px;border:1px solid #ccc;color:#fff;text-align:left;">Part Number</th>
-              <th style="padding:6px;border:1px solid #ccc;color:#fff;text-align:left;">Part Description</th>
-              <th style="padding:6px;border:1px solid #ccc;color:#fff;">HSN Code</th>
-              <th style="padding:6px;border:1px solid #ccc;color:#fff;">Qty</th>
-              <th style="padding:6px;border:1px solid #ccc;color:#fff;">Rate</th>
-              <th style="padding:6px;border:1px solid #ccc;color:#fff;">GST%</th>
-              <th style="padding:6px;border:1px solid #ccc;color:#fff;">GST Amount</th>
-              <th style="padding:6px;border:1px solid #ccc;color:#fff;">Amount</th>
+              <th style="padding:6px;border:1px solid #ccc;color:#fff;text-align:center;vertical-align:middle;white-space:nowrap;">SNo</th>
+              <th style="padding:6px;border:1px solid #ccc;color:#fff;text-align:center;vertical-align:middle;">Part Number</th>
+              <th style="padding:6px;border:1px solid #ccc;color:#fff;text-align:center;vertical-align:middle;">Part Description</th>
+              <th style="padding:6px;border:1px solid #ccc;color:#fff;text-align:center;vertical-align:middle;white-space:nowrap;">HSN Code</th>
+              <th style="padding:6px;border:1px solid #ccc;color:#fff;text-align:center;vertical-align:middle;white-space:nowrap;">Qty</th>
+              <th style="padding:6px;border:1px solid #ccc;color:#fff;text-align:center;vertical-align:middle;white-space:nowrap;">Rate</th>
+              <th style="padding:6px;border:1px solid #ccc;color:#fff;text-align:center;vertical-align:middle;white-space:nowrap;">GST%</th>
+              <th style="padding:6px;border:1px solid #ccc;color:#fff;text-align:center;vertical-align:middle;white-space:nowrap;">GST Amount</th>
+              <th style="padding:6px;border:1px solid #ccc;color:#fff;text-align:center;vertical-align:middle;white-space:nowrap;">Amount</th>
             </tr>
           </thead>
           <tbody>
