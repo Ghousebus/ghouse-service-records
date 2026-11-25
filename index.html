@@ -1023,7 +1023,7 @@
             <label for="soChequeDate">Date</label><input type="date" id="soChequeDate">
           </div>
           <div class="field" style="max-width:500px;">
-            <label for="soChequeAmount">For Amount Rs</label><input type="number" id="soChequeAmount" min="0" step="0.01" placeholder="Auto-filled from total; editable">
+            <label for="soChequeAmount">Amount</label><input type="number" id="soChequeAmount" min="0" step="0.01" placeholder="Auto-filled from total; editable">
           </div>
           <div class="review-list" style="margin-top:20px;">
             <div class="review-item"><dt>Sub Total</dt><dd id="soSubTotal">Rs. 0.00</dd></div>
@@ -2412,10 +2412,14 @@
         </table>
 
         <table width="100%" style="border-collapse:collapse;margin-bottom:14px;"><tr>
-          <td style="vertical-align:bottom;padding:8px 12px 10px 4px;font-size:12.5px;${chequeStyle}">
-            ${chequeNo ? '<div><b>Cheque No:</b> '+chequeNo+'</div>' : '<div><b>Cheque No:</b> —</div>'}
-            ${chequeDate ? '<div><b>Date:</b> '+new Date(chequeDate+'T00:00:00').toLocaleDateString('en-IN')+'</div>' : '<div><b>Date:</b> —</div>'}
-            <div><b>For Amount Rs:</b> ${qFormatCurrency(parseFloat(chequeAmount)||0)}</div>
+          <td style="vertical-align:bottom;padding:8px 12px 10px 4px;font-size:12.5px;">
+            <div style="font-weight:700;margin-bottom:5px;">Note:</div>
+            <div style="display:flex;align-items:baseline;gap:18px;white-space:nowrap;${chequeStyle}">
+              <span><b>1. Cheque No:</b> ${chequeNo || '—'}</span>
+              <span><b>Date:</b> ${chequeDate ? new Date(chequeDate+'T00:00:00').toLocaleDateString('en-IN') : '—'}</span>
+              <span><b>Amount:</b> ${qFormatCurrency(parseFloat(chequeAmount)||0)}</span>
+            </div>
+            <div style="font-weight:700;margin-top:7px;">2. Payment Terms: 45 days credit against PDC</div>
           </td>
           <td style="width:230px;">
             <div style="border:1.5px solid #111;padding:10px 14px;font-size:12.5px;">
