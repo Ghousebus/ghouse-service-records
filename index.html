@@ -2412,14 +2412,14 @@
         </table>
 
         <table width="100%" style="border-collapse:collapse;margin-bottom:14px;"><tr>
-          <td style="vertical-align:bottom;padding:8px 12px 10px 4px;font-size:12.5px;">
-            <div style="font-weight:700;margin-bottom:5px;">Note:</div>
-            <div style="display:flex;align-items:baseline;gap:18px;white-space:nowrap;${chequeStyle}">
+          <td style="vertical-align:bottom;padding:8px 12px 10px 4px;font-family:Arial,sans-serif;font-size:14px;font-weight:700;line-height:28px;">
+            <div style="font-size:14px;font-weight:700;line-height:28px;">Note:</div>
+            <div style="display:flex;align-items:baseline;gap:18px;white-space:nowrap;font-family:Arial,sans-serif;font-size:14px;font-weight:700;line-height:28px;${chequeStyle}">
               <span><b>1. Cheque No:</b> ${chequeNo || '—'}</span>
               <span><b>Date:</b> ${chequeDate ? new Date(chequeDate+'T00:00:00').toLocaleDateString('en-IN') : '—'}</span>
               <span><b>Amount:</b> ${qFormatCurrency(parseFloat(chequeAmount)||0)}</span>
             </div>
-            <div style="font-weight:700;margin-top:7px;">2. Payment Terms: 45 days credit against PDC</div>
+            <div style="font-family:Arial,sans-serif;font-size:14px;font-weight:700;line-height:28px;margin-top:0;">2. Payment Terms: 45 days credit against PDC</div>
           </td>
           <td style="width:230px;">
             <div style="border:1.5px solid #111;padding:10px 14px;font-size:12.5px;">
