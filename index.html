@@ -1016,6 +1016,15 @@
             <button type="button" class="print-btn" id="soAddRowBtn" style="flex:none;min-width:140px;">+ Add Row</button>
           </div>
 
+          <div class="field" style="margin-top:18px;max-width:500px;">
+            <label for="soChequeNo">Cheque No</label><input type="text" id="soChequeNo" placeholder="Enter cheque number">
+          </div>
+          <div class="field" style="max-width:500px;">
+            <label for="soChequeDate">Date</label><input type="date" id="soChequeDate">
+          </div>
+          <div class="field" style="max-width:500px;">
+            <label for="soChequeAmount">For Amount Rs</label><input type="number" id="soChequeAmount" min="0" step="0.01" placeholder="Auto-filled from total; editable">
+          </div>
           <div class="review-list" style="margin-top:20px;">
             <div class="review-item"><dt>Sub Total</dt><dd id="soSubTotal">Rs. 0.00</dd></div>
             <div class="review-item"><dt>GST Total</dt><dd id="soGstTotal">Rs. 0.00</dd></div>
@@ -2285,6 +2294,9 @@
     document.getElementById('soSubTotal').textContent = qFormatCurrency(subTotal);
     document.getElementById('soGstTotal').textContent = qFormatCurrency(gstTotal);
     document.getElementById('soGrandTotal').textContent = qFormatCurrency(grandTotal);
+    const chequeAmountField = document.getElementById('soChequeAmount');
+    if (chequeAmountField && !chequeAmountField.dataset.manual) chequeAmountField.value = grandTotal.toFixed(2);
+    if (chequeAmountField && !chequeAmountField.dataset.bound) { chequeAmountField.addEventListener('input', () => chequeAmountField.dataset.manual = '1'); chequeAmountField.dataset.bound = '1'; }
     document.getElementById('soAmountWords').textContent = qNumberToWords(grandTotal);
 
     return { items, subTotal, gstTotal, grandTotal };
@@ -2311,6 +2323,11 @@
 
   function soBuildDocHtml(header, calc){
     const { items, subTotal, gstTotal, grandTotal } = calc;
+    const chequeNo = document.getElementById('soChequeNo')?.value.trim() || '';
+    const chequeDate = document.getElementById('soChequeDate')?.value || '';
+    const chequeAmount = document.getElementById('soChequeAmount')?.value || grandTotal.toFixed(2);
+    const chequeFilled = !!(chequeNo && chequeDate && chequeAmount !== '');
+    const chequeStyle = chequeFilled ? 'font-weight:700;' : ''; 
     const itemRows = items.map((it, idx) => `
       <tr>
         <td style="padding:6px;border:1px solid #ccc;text-align:center;">${idx + 1}</td>
@@ -2395,7 +2412,11 @@
         </table>
 
         <table width="100%" style="border-collapse:collapse;margin-bottom:14px;"><tr>
-          <td></td>
+          <td style="vertical-align:bottom;padding:8px 12px 10px 4px;font-size:12.5px;${chequeStyle}">
+            ${chequeNo ? '<div><b>Cheque No:</b> '+chequeNo+'</div>' : '<div><b>Cheque No:</b> —</div>'}
+            ${chequeDate ? '<div><b>Date:</b> '+new Date(chequeDate+'T00:00:00').toLocaleDateString('en-IN')+'</div>' : '<div><b>Date:</b> —</div>'}
+            <div><b>For Amount Rs:</b> ${qFormatCurrency(parseFloat(chequeAmount)||0)}</div>
+          </td>
           <td style="width:230px;">
             <div style="border:1.5px solid #111;padding:10px 14px;font-size:12.5px;">
               <div style="display:flex;justify-content:space-between;"><span>Sub Total</span><span>${qFormatCurrency(subTotal)}</span></div>
